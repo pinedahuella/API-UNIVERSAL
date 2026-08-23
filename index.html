@@ -2,109 +2,121 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1016">
 <title>API UNIVERSAL</title>
-<link rel="stylesheet" href="css/styles.css?v=2">
+<link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 <body>
 
-<!-- ============ ACCESO ============ -->
+<!-- ================= ACCESO ================= -->
 <section id="acceso" class="acceso">
-  <div class="acceso-marca">
-    <h1>API <span>UNIVERSAL</span></h1>
-    <p>Sistema capaz de responder cualquier información</p>
-    <p class="acceso-nota">Demostración. La página se arma distinta para cada persona
-      a partir de los datos que registra.</p>
+  <div class="acceso-arte">
+    <div class="acceso-arte-in">
+      <div class="marca grande">API<span>UNIVERSAL</span></div>
+      <h2>Tu página se arma sola.</h2>
+      <p>Entrá, mirá lo que te llame la atención y mirá cómo todo lo demás
+         empieza a acomodarse a vos.</p>
+      <div class="acceso-pastillas">
+        <span>🐶</span><span>🐱</span><span>⚽</span><span>🎧</span>
+        <span>💻</span><span>🍜</span><span>✈️</span><span>🎮</span>
+      </div>
+      <p class="mini-nota">Demostración de la propuesta. No es el producto terminado.</p>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="tabs">
-      <button class="tab activo" data-panel="p-login">Iniciar sesión</button>
-      <button class="tab" data-panel="p-registro">Crear cuenta</button>
-    </div>
+  <div class="acceso-form">
+    <div class="card">
+      <div class="tabs">
+        <button class="tab activo" data-panel="p-login">Entrar</button>
+        <button class="tab" data-panel="p-registro">Crear cuenta</button>
+      </div>
 
-    <!-- login -->
-    <form id="p-login" class="panel activo" autocomplete="off">
-      <label>Usuario
-        <input type="text" id="login-user" placeholder="tu usuario" required>
-      </label>
-      <label>Contraseña
-        <input type="password" id="login-pass" placeholder="tu contraseña" required>
-      </label>
-      <p class="error" id="login-error"></p>
-      <button type="submit" class="btn">Entrar</button>
-      <p class="pie">¿No tenés cuenta? <a href="#" data-ir="p-registro">Creá una</a></p>
-    </form>
+      <form id="p-login" class="panel activo" autocomplete="off">
+        <label>Usuario<input type="text" id="login-user" placeholder="tu usuario" required></label>
+        <label>Contraseña<input type="password" id="login-pass" placeholder="tu contraseña" required></label>
+        <p class="error" id="login-error"></p>
+        <button type="submit" class="btn">Entrar</button>
+        <p class="pie">¿Primera vez? <a href="#" data-ir="p-registro">Creá tu cuenta</a></p>
+      </form>
 
-    <!-- registro -->
-    <form id="p-registro" class="panel" autocomplete="off">
-      <div class="paso" data-paso="1">
-        <label>Nombre
-          <input type="text" id="reg-nombre" placeholder="cómo te llamás" required>
-        </label>
-        <label>Usuario
-          <input type="text" id="reg-user" placeholder="elegí un usuario" required>
-        </label>
-        <label>Contraseña
-          <input type="password" id="reg-pass" placeholder="mínimo 4 caracteres" required>
-        </label>
+      <form id="p-registro" class="panel" autocomplete="off">
+        <label>Nombre<input type="text" id="reg-nombre" placeholder="cómo te llamás" required></label>
+        <label>Usuario<input type="text" id="reg-user" placeholder="elegí un usuario" required></label>
+        <label>Contraseña<input type="password" id="reg-pass" placeholder="mínimo 4 caracteres" required></label>
         <p class="error" id="reg-error"></p>
-        <button type="button" class="btn" id="ir-paso2">Siguiente</button>
-      </div>
-
-      <div class="paso" data-paso="2" hidden>
-        <p class="pregunta">¿Qué te interesa? <small>Elegí de 1 a 3</small></p>
-        <div class="chips" id="chips-interes"></div>
-
-        <p class="pregunta">¿Cómo preferís ver la página?</p>
-        <div class="chips" id="chips-tema"></div>
-
-        <p class="pregunta">¿Qué querés hacer aquí?</p>
-        <div class="chips" id="chips-uso"></div>
-
-        <p class="error" id="reg-error2"></p>
-        <div class="fila">
-          <button type="button" class="btn ghost" id="volver-paso1">Atrás</button>
-          <button type="submit" class="btn">Crear mi cuenta</button>
-        </div>
-      </div>
-    </form>
+        <button type="submit" class="btn">Crear cuenta</button>
+        <p class="pie tenue chico">No te preguntamos qué te gusta. Eso lo va a ir aprendiendo la página.</p>
+      </form>
+    </div>
   </div>
 </section>
 
-<!-- ============ APP ============ -->
+<!-- ================= APP ================= -->
 <section id="app" hidden>
   <header class="top">
-    <div class="top-marca">API <span>UNIVERSAL</span></div>
-    <nav class="top-nav">
-      <button class="nav-btn activo" data-vista="v-inicio">Inicio</button>
-      <button class="nav-btn" data-vista="v-mensajes">Mensajes</button>
-      <button class="nav-btn" data-vista="v-video">Video</button>
-      <button class="nav-btn" data-vista="v-perfil">Mi perfil</button>
-    </nav>
+    <button class="menu-btn" id="menu-btn" aria-label="Menú">☰</button>
+    <div class="marca">API<span>UNIVERSAL</span></div>
+    <div class="buscador"><span>🔎</span><input type="text" placeholder="Buscar" disabled></div>
     <div class="top-user">
       <span class="avatar" id="avatar"></span>
-      <span id="top-nombre"></span>
-      <button class="btn mini ghost" id="salir">Salir</button>
+      <span class="top-nombre" id="top-nombre"></span>
+      <button class="btn ghost mini" id="salir">Salir</button>
     </div>
   </header>
 
   <div class="cuerpo">
+    <nav class="menu" id="menu">
+      <button class="menu-item activo" data-vista="v-inicio"><i>🏠</i>Inicio</button>
+      <button class="menu-item" data-vista="v-videos"><i>▶️</i>Videos</button>
+      <button class="menu-item" data-vista="v-mensajes"><i>💬</i>Mensajes</button>
+      <button class="menu-item" data-vista="v-perfil"><i>👤</i>Mi perfil</button>
+      <div class="menu-sep"></div>
+      <div class="menu-titulo">Tu página ahorita</div>
+      <div id="barras" class="barras"></div>
+    </nav>
+
     <main class="centro">
-      <div class="aviso" id="aviso"></div>
+      <div id="banner" class="banner"></div>
 
-      <!-- inicio -->
-      <div id="v-inicio" class="vista activo">
-        <div class="publicar">
-          <span class="avatar" id="avatar2"></span>
-          <input type="text" id="post-texto" placeholder="Escribí algo...">
-          <button class="btn mini" id="post-enviar">Publicar</button>
+      <!-- ---------- inicio ---------- -->
+      <section id="v-inicio" class="vista activo">
+        <div id="inicio-vacio" class="vacio">
+          <div class="vacio-ico">▶️</div>
+          <h3>Todavía no sabemos nada de vos</h3>
+          <p>Abrí cualquiera de estos videos. Con eso solo, la página se va a ir
+             armando a tu gusto: los colores, lo que aparece y con quién platicás.</p>
         </div>
+        <h4 class="seccion" id="titulo-inicio"></h4>
+        <div id="rejilla-inicio" class="rejilla"></div>
+        <h4 class="seccion" id="titulo-foro" hidden>En el foro</h4>
         <div id="feed"></div>
-      </div>
+      </section>
 
-      <!-- mensajes -->
-      <div id="v-mensajes" class="vista">
+      <!-- ---------- videos ---------- -->
+      <section id="v-videos" class="vista">
+        <div id="reproductor-caja" hidden>
+          <div class="reproductor" id="reproductor">
+            <div class="escena" id="escena"></div>
+            <button class="play" id="play" aria-label="Reproducir">▶</button>
+            <div class="barra"><div class="barra-in" id="barra-in"></div></div>
+          </div>
+          <div class="video-info">
+            <h3 id="video-titulo"></h3>
+            <p class="tenue chico" id="video-canal"></p>
+            <div class="acciones">
+              <button class="accion" id="v-like">🤍 Me gusta</button>
+              <button class="accion" id="v-guardar">🔖 Guardar</button>
+            </div>
+            <div class="comentarios" id="video-coment"></div>
+          </div>
+        </div>
+        <h4 class="seccion" id="titulo-videos"></h4>
+        <div id="rejilla-videos" class="rejilla"></div>
+      </section>
+
+      <!-- ---------- mensajes ---------- -->
+      <section id="v-mensajes" class="vista">
         <div class="chat">
           <div class="chat-head" id="chat-head"></div>
           <div class="chat-cuerpo" id="chat-cuerpo"></div>
@@ -113,51 +125,23 @@
             <button class="btn mini" id="chat-enviar">Enviar</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- video -->
-      <div id="v-video" class="vista">
-        <div class="tarjeta">
-          <div class="reproductor" id="reproductor">
-            <div class="escena" id="escena"></div>
-            <button class="play" id="play">&#9654;</button>
-            <div class="barra"><div class="barra-in" id="barra-in"></div></div>
-          </div>
-          <h3 id="video-titulo"></h3>
-          <p class="tenue" id="video-desc"></p>
-        </div>
-        <div id="video-lista" class="lista-videos"></div>
-      </div>
-
-      <!-- perfil -->
-      <div id="v-perfil" class="vista">
+      <!-- ---------- perfil ---------- -->
+      <section id="v-perfil" class="vista">
         <div class="tarjeta perfil">
-          <span class="avatar grande" id="avatar3"></span>
+          <span class="avatar xl" id="avatar2"></span>
           <h3 id="perfil-nombre"></h3>
-          <p class="tenue" id="perfil-user"></p>
-          <p class="pregunta">Tus intereses</p>
+          <p class="tenue chico" id="perfil-user"></p>
+          <p class="tenue" id="perfil-resumen"></p>
           <div class="chips" id="perfil-chips"></div>
-          <p class="tenue">Si cambiás esto, la página se vuelve a armar al instante.</p>
-          <button class="btn mini" id="perfil-guardar">Guardar cambios</button>
+          <button class="btn ghost mini" id="reiniciar">Empezar de nuevo</button>
         </div>
-      </div>
+      </section>
     </main>
-
-    <aside class="lado">
-      <div class="tarjeta">
-        <strong>Tu página ahorita</strong>
-        <p class="tenue chico">Se acomoda sola con lo que vas viendo y marcando.</p>
-        <ul class="temas" id="temas"></ul>
-      </div>
-
-      <div class="tarjeta">
-        <strong>Descubrí algo nuevo</strong>
-        <div class="chips" id="descubrir"></div>
-      </div>
-    </aside>
   </div>
 </section>
 
-<script src="js/app.js?v=2"></script>
+<script src="js/app.js?v=3"></script>
 </body>
 </html>
