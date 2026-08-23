@@ -7,6 +7,7 @@ html[data-au]{
   --au-fondo:#eef7f1;
   --au-papel:#ffffff;
   --au-tinta:#12171f;
+  --au-tinta2:#5b6272;
   --au-linea:#d6e6dc;
   --au-radio:18px;
   --au-tit:Georgia, serif;
@@ -19,18 +20,61 @@ html[data-au] body{
   color:var(--au-tinta) !important;
   font-family:var(--au-txt) !important;
 }
-/* los contenedores del sitio se vuelven transparentes para que se vea el fondo.
+/* Los contenedores del sitio se vuelven transparentes para que se vea el fondo.
    Lo nuestro (todo lo que empieza con au-) se queda como esta. */
 html[data-au] main,
-html[data-au] main > div,
+html[data-au] main div,
 html[data-au] main section,
 html[data-au] div[role="presentation"],
-html[data-au] nav, html[data-au] nav > div,
+html[data-au] nav, html[data-au] nav div,
 html[data-au] body > div:not([id^="au-"]),
 html[data-au] body > div > div:not([id^="au-"]),
 html[data-au] div.html-div:not([id^="au-"]){
   background-color:transparent !important;
 }
+
+/* ---- que TODO el texto del sitio se lea sobre el fondo nuevo ---- */
+html[data-au] span, html[data-au] div, html[data-au] p,
+html[data-au] h1, html[data-au] h2, html[data-au] h3,
+html[data-au] label, html[data-au] time{
+  color:var(--au-tinta) !important;
+}
+html[data-au] time,
+html[data-au] span[style*="color: rgb(115"],
+html[data-au] span[style*="color:rgb(115"]{
+  color:var(--au-tinta2) !important;
+}
+html[data-au] a{color:var(--au-tinta) !important; text-decoration:none}
+html[data-au] a[role="link"] span{color:var(--au-tinta) !important}
+
+/* el encabezado de cada publicacion. Instagram no usa <header> aqui: es el primer
+   bloque de enlaces del article, con el usuario y la hora. */
+html[data-au] article > div > div:first-child a[role="link"],
+html[data-au] article > div > div:first-child span{
+  color:var(--au-tinta) !important;
+}
+html[data-au] div[role="button"], html[data-au] button{color:var(--au-acento) !important}
+html[data-au] button[type="button"]{background-color:transparent !important}
+html[data-au] div[role="button"] span, html[data-au] button span{
+  color:var(--au-acento) !important; font-weight:700;
+}
+
+/* los iconos del sitio: si no se pintan, en fondo oscuro desaparecen */
+html[data-au] svg{color:var(--au-tinta) !important; fill:var(--au-tinta) !important}
+html[data-au] nav svg{opacity:.92}
+
+/* el menu lateral */
+html[data-au] nav{
+  background-color:var(--au-papel) !important;
+  border-right:1px solid var(--au-linea) !important;
+  backdrop-filter:blur(10px);
+}
+html[data-au] nav a:hover, html[data-au] nav div[role="button"]:hover{
+  background-color:var(--au-linea) !important;
+  border-radius:var(--au-radio) !important;
+}
+
+/* publicaciones */
 html[data-au] article{
   background-color:var(--au-papel) !important;
   border:1px solid var(--au-linea) !important;
@@ -38,18 +82,41 @@ html[data-au] article{
   overflow:hidden !important;
   margin-bottom:18px !important;
 }
-html[data-au] nav{
-  backdrop-filter:blur(8px);
-  background-color:rgba(255,255,255,.5) !important;
-  border-right:1px solid var(--au-linea) !important;
+
+/* la columna de la derecha y la fila de historias, cada una en su tarjeta */
+html[data-au] main aside,
+html[data-au] main > div > div:last-child > div:first-child,
+html[data-au] div[role="presentation"]:has(canvas){
+  background-color:var(--au-papel) !important;
+  border:1px solid var(--au-linea) !important;
+  border-radius:var(--au-radio) !important;
+  padding:14px !important;
 }
-html[data-au] img{border-radius:6px}
+
+/* la burbuja flotante de mensajes */
+html[data-au] body > div > div > div[style*="position: fixed"],
+html[data-au] body > div > div > div[style*="position:fixed"]{
+  background-color:var(--au-papel) !important;
+  border:1px solid var(--au-linea) !important;
+  border-radius:99px !important;
+}
+
+/* el pie de pagina */
+html[data-au] footer, html[data-au] footer *{color:var(--au-tinta2) !important}
+html[data-au] hr, html[data-au] div[style*="border-top"]{border-color:var(--au-linea) !important}
+
+html[data-au] img{border-radius:8px}
 
 /* la barra de arriba */
+/* lo nuestro no se deja pisar por las reglas de arriba */
 html[data-au] #au-barra{background:var(--au-acento) !important}
+html[data-au] #au-barra *{color:#fff !important; fill:#fff !important}
 html[data-au] #au-tarjeta{
   background:linear-gradient(120deg, var(--au-acento), var(--au-acento2)) !important;
 }
+html[data-au] #au-tarjeta *{color:#fff !important}
+html[data-au] #au-aviso{background:#ffffff !important}
+html[data-au] #au-aviso, html[data-au] #au-aviso *{color:#12171f !important}
 
 #au-barra{
   position:fixed; top:0; left:0; right:0; height:44px; z-index:2147483000;

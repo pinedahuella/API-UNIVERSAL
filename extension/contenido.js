@@ -61,9 +61,10 @@ function vestir(d, sel){
   p.setProperty('--au-acento',  d.acento);
   p.setProperty('--au-acento2', d.acento2);
   p.setProperty('--au-fondo',   d.fondo);
-  p.setProperty('--au-papel',   d.oscuro ? aclarar(d.fondo, 12) : '#ffffff');
-  p.setProperty('--au-tinta',   d.oscuro ? '#f2f5fb' : '#12171f');
-  p.setProperty('--au-linea',   d.oscuro ? aclarar(d.fondo, 22) : mezclar(d.acento, .78));
+  p.setProperty('--au-papel',   d.oscuro ? aclarar(d.fondo, 18) : '#ffffff');
+  p.setProperty('--au-tinta',   d.oscuro ? '#f4f6fb' : '#12171f');
+  p.setProperty('--au-tinta2',  d.oscuro ? '#c3c9d8' : '#5b6272');
+  p.setProperty('--au-linea',   d.oscuro ? aclarar(d.fondo, 34) : mezclar(d.acento, .78));
   p.setProperty('--au-radio',   d.radio || '18px');
   p.setProperty('--au-tit',     pila(d.fuente_tit));
   p.setProperty('--au-txt',     pila(d.fuente_txt));
