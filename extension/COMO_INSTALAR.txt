@@ -1,0 +1,20 @@
+API UNIVERSAL - extension de Chrome
+
+1. Arrancar el servidor:  doble clic a INICIAR.bat  (o: node servidor/servidor.js)
+
+2. En Chrome abrir:  chrome://extensions
+
+3. Arriba a la derecha, activar "Modo de desarrollador".
+
+4. Boton "Cargar descomprimida" y senalar esta carpeta:
+   C:\Proyectos\API-UNIVERSAL\extension
+
+5. Entrar a Instagram, hacer clic en el icono de la extension,
+   escribir de que es la pagina (por ejemplo: un vivero de plantas)
+   y darle a "Vestir esta pagina".
+
+Queda instalada. Para dejar la pagina como estaba: boton "Quitar" en la
+barra verde, o "Dejarla como estaba" en el popup.
+
+Nota: la extension NO cambia nada en Instagram. Solo cambia el CSS en este
+navegador. Al quitarla, la pagina vuelve a ser la de siempre.

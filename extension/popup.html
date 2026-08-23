@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  body{width:290px;margin:0;padding:16px;font:14px "Segoe UI",system-ui,sans-serif;color:#12171f}
+  h1{font-size:15px;margin:0 0 3px;letter-spacing:-.02em}
+  h1 span{color:#5b6cff}
+  p{margin:0 0 14px;font-size:12px;color:#767d8f;line-height:1.5}
+  label{display:block;font-size:11px;font-weight:700;color:#767d8f;margin-bottom:6px;
+        text-transform:uppercase;letter-spacing:.05em}
+  input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #e2e5ee;
+        border-radius:10px;font:inherit;margin-bottom:12px}
+  input:focus{outline:0;border-color:#5b6cff;box-shadow:0 0 0 3px rgba(91,108,255,.14)}
+  button{width:100%;padding:11px;border:0;border-radius:10px;background:#5b6cff;color:#fff;
+         font:inherit;font-weight:600;cursor:pointer;margin-bottom:7px}
+  button:hover{filter:brightness(1.08)}
+  button.gris{background:transparent;color:#767d8f;border:1px solid #e2e5ee}
+  #msg{font-size:12px;color:#767d8f;line-height:1.45;margin:8px 0 0;min-height:16px}
+</style>
+<h1>API <span>UNIVERSAL</span></h1>
+<p>Viste la página que estás viendo con el diseño que arma la conexión. No cambia nada
+   en el sitio: solo en tu navegador.</p>
+<label>¿De qué es tu página?</label>
+<input id="tema" placeholder="un vivero de plantas" autofocus>
+<button id="vestir">Vestir esta página</button>
+<button id="quitar" class="gris">Dejarla como estaba</button>
+<p id="msg"></p>
+<script src="popup.js"></script>

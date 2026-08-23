@@ -80,6 +80,58 @@ Los colores y las fuentes tienen que ir con el tema, no elijas al azar.
 Nada de texto fuera del JSON.`;
 }
 
+/* ---------- vestir una pagina que ya existe ---------- */
+function promptVestir(r){
+  const est = JSON.stringify(r.estructura || {}).slice(0, 6000);
+  return `Tengo que vestir una pagina web que YA EXISTE, sin tocar su servidor: solo le
+cambio el CSS desde el navegador. La pagina es de: ${r.tema}
+
+Este es el esqueleto de la pagina. Cada zona trae su selector CSS (s), su ancho (w),
+alto (h), posicion (x,y) y cuantas imagenes, enlaces y botones tiene adentro:
+
+${est}
+
+Devolve SOLO este JSON:
+
+{
+ "titulo": "nombre corto para la pagina, maximo 4 palabras, que vaya con ${r.tema}",
+ "bienvenida": "dos frases que presenten la pagina, en español de Guatemala, tuteando",
+ "motivos": [4 emojis que vayan con ${r.tema}],
+ "acento": "#hex",
+ "acento2": "#hex",
+ "fondo": "#hex",
+ "oscuro": true o false,
+ "fuente_tit": una de: Fredoka, Quicksand, Bebas Neue, Space Grotesk, Playfair Display, Lora,
+ "fuente_txt": una de: Fredoka, Quicksand, Space Grotesk, Lora,
+ "radio": "un valor css entre 2px y 28px",
+ "selectores": {
+   "zonas": [1 o 2 selectores del esqueleto que sean el contenedor principal del contenido],
+   "tarjetas": [1 o 2 selectores que agrupen imagenes, para redondearlas],
+   "titulos": [1 o 2 selectores de encabezados, si los ves]
+ }
+}
+
+Reglas: usa SOLO selectores que aparezcan en el esqueleto, copiados tal cual. No elijas
+zonas gigantes que cubran toda la pantalla (h mayor a 2000) como "zonas". Si "oscuro" es
+true el fondo va oscuro y el acento claro; si es false el fondo va claro pero nunca blanco.
+Los colores tienen que ir con ${r.tema}. Nada de texto fuera del JSON.`;
+}
+
+function pedirAClaude(prompt){
+  return new Promise((ok, mal) => {
+    if(!CLAUDE) return mal(new Error('claude CLI no encontrado'));
+    const hijo = execFile(CLAUDE,
+      ['--print', '--system-prompt', SISTEMA, '--allowedTools', '', '--model', 'haiku', '-p', prompt],
+      { timeout: TIMEOUT, cwd: os.tmpdir(), maxBuffer: 8 * 1024 * 1024,
+        env: Object.assign({}, process.env, { LANG: 'en_US.UTF-8' }) },
+      (err, salida) => {
+        if(err) return mal(new Error(err.killed ? 'claude tardo demasiado' : String(err.message).slice(0,180)));
+        try { ok(sacarJSON(salida)); } catch(e){ mal(e); }
+      });
+    hijo.on('error', mal);
+  });
+}
+
 function sacarJSON(txt){
   const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
   if(a < 0 || b < a) throw new Error('sin JSON en la respuesta');
@@ -126,6 +178,29 @@ const servidor = http.createServer((req, res) => {
   if(req.url.startsWith('/api/estado')){
     res.writeHead(200, {'Content-Type':'application/json'});
     res.end(JSON.stringify({ claude: !!CLAUDE, ruta: CLAUDE || null }));
+    return;
+  }
+
+  if(req.method === 'POST' && req.url.startsWith('/api/vestir')){
+    let cuerpo = '';
+    req.on('data', d => { cuerpo += d; if(cuerpo.length > 200000) req.destroy(); });
+    req.on('end', async () => {
+      let r; try { r = JSON.parse(cuerpo || '{}'); } catch { r = {}; }
+      const t0 = Date.now();
+      console.log(`[vestir] "${(r.tema||'').slice(0,40)}" sobre ${r.estructura?.sitio || '?'} ...`);
+      try {
+        const d = await pedirAClaude(promptVestir(r));
+        const sel = d.selectores || {};
+        delete d.selectores;
+        console.log(`[vestir] listo en ${((Date.now()-t0)/1000).toFixed(1)}s -> ${d.titulo}`);
+        res.writeHead(200, {'Content-Type':'application/json; charset=utf-8'});
+        res.end(JSON.stringify({ diseno:d, selectores:sel }));
+      } catch(e){
+        console.log(`[vestir] falló: ${e.message}`);
+        res.writeHead(503, {'Content-Type':'application/json'});
+        res.end(JSON.stringify({ error:e.message }));
+      }
+    });
     return;
   }
 

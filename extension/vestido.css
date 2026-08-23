@@ -1,0 +1,119 @@
+/* Estilos base de la extension. Van en el manifest, asi no los bloquea el CSP
+   de la pagina. Los colores concretos los pone contenido.js como variables. */
+
+html[data-au]{
+  --au-acento:#2f8f5b;
+  --au-acento2:#7ad4a1;
+  --au-fondo:#eef7f1;
+  --au-papel:#ffffff;
+  --au-tinta:#12171f;
+  --au-linea:#d6e6dc;
+  --au-radio:18px;
+  --au-tit:Georgia, serif;
+  --au-txt:"Segoe UI", system-ui, sans-serif;
+}
+
+/* el fondo de toda la pagina */
+html[data-au] body{
+  background-color:var(--au-fondo) !important;
+  color:var(--au-tinta) !important;
+  font-family:var(--au-txt) !important;
+}
+/* los contenedores del sitio se vuelven transparentes para que se vea el fondo.
+   Lo nuestro (todo lo que empieza con au-) se queda como esta. */
+html[data-au] main,
+html[data-au] main > div,
+html[data-au] main section,
+html[data-au] div[role="presentation"],
+html[data-au] nav, html[data-au] nav > div,
+html[data-au] body > div:not([id^="au-"]),
+html[data-au] body > div > div:not([id^="au-"]),
+html[data-au] div.html-div:not([id^="au-"]){
+  background-color:transparent !important;
+}
+html[data-au] article{
+  background-color:var(--au-papel) !important;
+  border:1px solid var(--au-linea) !important;
+  border-radius:var(--au-radio) !important;
+  overflow:hidden !important;
+  margin-bottom:18px !important;
+}
+html[data-au] nav{
+  backdrop-filter:blur(8px);
+  background-color:rgba(255,255,255,.5) !important;
+  border-right:1px solid var(--au-linea) !important;
+}
+html[data-au] img{border-radius:6px}
+
+/* la barra de arriba */
+html[data-au] #au-barra{background:var(--au-acento) !important}
+html[data-au] #au-tarjeta{
+  background:linear-gradient(120deg, var(--au-acento), var(--au-acento2)) !important;
+}
+
+#au-barra{
+  position:fixed; top:0; left:0; right:0; height:44px; z-index:2147483000;
+  display:flex; align-items:center; gap:12px; padding:0 16px;
+  background:var(--au-acento); color:#fff;
+  font-family:var(--au-txt); font-size:13px; font-weight:600;
+  box-shadow:0 2px 14px rgba(0,0,0,.16);
+}
+#au-barra b{font-family:var(--au-tit); font-size:15px; letter-spacing:-.01em}
+#au-barra .au-sep{opacity:.55; font-weight:400}
+#au-barra .au-motivos{margin-left:auto; font-size:16px; letter-spacing:.16em; opacity:.85}
+#au-barra .au-x{
+  border:0; background:rgba(255,255,255,.2); color:#fff; border-radius:99px;
+  padding:5px 12px; font:inherit; cursor:pointer;
+}
+#au-barra .au-x:hover{background:rgba(255,255,255,.34)}
+html[data-au] body{padding-top:44px !important}
+
+/* lo que la conexion decidio vestir */
+html[data-au] .au-zona{
+  background:var(--au-papel) !important;
+  border-radius:var(--au-radio) !important;
+  position:relative; z-index:1;
+}
+html[data-au] .au-tarjeta{
+  border-radius:var(--au-radio) !important;
+  overflow:hidden !important;
+  box-shadow:0 6px 20px rgba(0,0,0,.10) !important;
+  transition:transform .18s ease;
+}
+html[data-au] .au-tarjeta:hover{transform:translateY(-3px)}
+html[data-au] .au-tit{
+  font-family:var(--au-tit) !important;
+  color:var(--au-acento) !important;
+  letter-spacing:-.01em !important;
+}
+html[data-au] a{color:var(--au-acento) !important}
+html[data-au] button:not(.au-x){border-radius:calc(var(--au-radio) / 2) !important}
+
+/* la tarjeta de presentacion que se mete arriba del contenido */
+#au-tarjeta{
+  position:relative; z-index:1; margin:0 auto 22px; max-width:960px;
+  background:linear-gradient(120deg, var(--au-acento), var(--au-acento2));
+  color:#fff; border-radius:var(--au-radio); padding:22px 26px;
+  font-family:var(--au-txt); box-shadow:0 12px 30px rgba(0,0,0,.16);
+  overflow:hidden;
+}
+#au-tarjeta h2{
+  font-family:var(--au-tit); font-size:26px; margin:0 0 6px; letter-spacing:-.02em;
+}
+#au-tarjeta p{margin:0; font-size:14px; line-height:1.55; opacity:.94; max-width:620px}
+#au-tarjeta .au-deco{
+  position:absolute; right:-4px; top:50%; transform:translateY(-50%);
+  font-size:58px; letter-spacing:.1em; opacity:.18; pointer-events:none;
+}
+#au-tarjeta .au-etiqueta{
+  display:inline-block; background:rgba(255,255,255,.22); border-radius:99px;
+  padding:3px 11px; font-size:11px; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase; margin-bottom:10px;
+}
+
+#au-aviso{
+  position:fixed; right:16px; bottom:16px; z-index:2147483000;
+  background:var(--au-tinta); color:#fff; padding:11px 16px; border-radius:12px;
+  font-family:var(--au-txt); font-size:13px; max-width:300px; line-height:1.45;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
