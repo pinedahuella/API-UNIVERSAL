@@ -14,7 +14,8 @@ const AU = {
   SERVIDOR: 'http://localhost:4321',
   guardado: null,
   puesto: false,
-  observador: null
+  observador: null,
+  iconos: []
 };
 
 /* ============ 1. LEER LA ESTRUCTURA ============ */
@@ -53,22 +54,32 @@ function estructura(){
 
 /* ============ 2. CLASIFICAR MIDIENDO ============ */
 const CLASES = ['au-btn','au-fila','au-caja','au-avatar','au-media',
-                'au-panel','au-entrada','au-icono','au-nota'];
+                'au-panel','au-entrada','au-icono','au-nota','au-enlace',
+                'au-grande','au-flotante',
+                'au-mosaico','au-pieza','au-pieza-grande','au-ancho','au-tramo'];
 
 function clasificar(){
   document.querySelectorAll('.' + CLASES.join(',.')).forEach(e => e.classList.remove(...CLASES));
   const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
-  const n = { btn:0, fila:0, caja:0, avatar:0, media:0, panel:0, entrada:0, icono:0, nota:0 };
+  const n = { btn:0, fila:0, caja:0, avatar:0, media:0, panel:0, entrada:0, icono:0, nota:0, enlace:0, flotante:0 };
 
   /* fotos: por tamaño. Un avatar de 32px no se marca igual que una foto de 500px */
   document.querySelectorAll('img, video').forEach(e => {
     if(!vis(e) || e.closest('[id^="au-"]')) return;
     const r = e.getBoundingClientRect(), lado = Math.min(r.width, r.height);
-    if(lado <= 76){ e.classList.add('au-avatar'); n.avatar++; }
+    if(lado <= 76){
+      e.classList.add('au-avatar');
+      if(lado >= 44) e.classList.add('au-grande');
+      n.avatar++;
+    }
     else if(Math.max(r.width, r.height) >= 150){ e.classList.add('au-media'); n.media++; }
   });
 
-  /* clicables: chico con texto = boton; grande o con foto = fila de lista */
+  /* Clicables. La distincion que importa: un <a href> es un ENLACE, nunca un boton
+     de accion. En Instagram el nombre de usuario, la hora ("2d") y el audio de un
+     reel son <a role="link"> cortos; si se estilizan como boton, la pagina se llena
+     de pastillas de color donde deberia haber texto. Solo <button> y [role=button]
+     sin href pueden ser botones. */
   document.querySelectorAll('[role="button"], button, [role="link"], a[href]').forEach(e => {
     if(!vis(e) || e.closest('[id^="au-"]')) return;
     if(e.parentElement && e.parentElement.closest('[role="button"],button,[role="link"]')) return;
@@ -77,11 +88,18 @@ function clasificar(){
     const tieneSvg = !!e.querySelector('svg');
     const tieneImg = !!e.querySelector('img,canvas');
     const enMenu = !!e.closest('nav');
+    const esEnlace = e.tagName === 'A' && e.hasAttribute('href');
+    const esAccion = !esEnlace && (e.tagName === 'BUTTON' || e.getAttribute('role') === 'button');
 
     if(enMenu || tieneSvg || !txt){ e.classList.add('au-icono'); n.icono++; return; }
     if(r.width >= 240 || r.height >= 64 || tieneImg){ e.classList.add('au-fila'); n.fila++; return; }
-    if(txt.length <= 22 && r.height <= 52){ e.classList.add('au-btn'); n.btn++; return; }
-    e.classList.add('au-fila'); n.fila++;
+    /* un boton de accion de verdad: "Seguir", "Enviar mensaje". Texto de 3 letras
+       para arriba, asi las burbujitas de conteo ("1", "9") no se vuelven botones. */
+    if(esAccion && txt.length >= 3 && txt.length <= 22 && r.height <= 52){
+      e.classList.add('au-btn'); n.btn++; return;
+    }
+    if(esEnlace){ e.classList.add('au-enlace'); n.enlace++; return; }
+    e.classList.add('au-icono'); n.icono++;
   });
 
   /* notas y globitos de medida justa: al cambiar la tipografia el texto crece
@@ -99,11 +117,98 @@ function clasificar(){
 
   document.querySelectorAll('input[type="text"],input[type="search"],input:not([type]),textarea,[role="textbox"],[contenteditable="true"]')
     .forEach(e => { if(vis(e) && !e.closest('[id^="au-"]')){ e.classList.add('au-entrada'); n.entrada++; } });
+  /* widgets flotantes (la burbuja de mensajes). Se detectan por position:fixed
+     medido, no por el atributo style: el sitio los pinta con clases. */
+  document.querySelectorAll('body div').forEach(e => {
+    if(!vis(e) || e.closest('[id^="au-"]')) return;
+    if(getComputedStyle(e).position !== 'fixed') return;
+    const r = e.getBoundingClientRect();
+    if(r.width < 120 || r.width > 560 || r.height < 36 || r.height > 200) return;
+    if(e.querySelector('div[style*="position: fixed"]')) return;
+    e.classList.add('au-flotante'); n.flotante++;
+  });
+
   document.querySelectorAll('article, aside, [role="article"]')
     .forEach(e => { if(vis(e)){ e.classList.add('au-caja'); n.caja++; } });
   document.querySelectorAll('nav, [role="navigation"]')
     .forEach(e => { if(vis(e)){ e.classList.add('au-panel'); n.panel++; } });
+
+  mosaico();
   return n;
+}
+
+/* ============ 2b. EL MOSAICO ============
+   El feed del sitio es una sola columna angosta. Aqui se ensancha y se pasa a
+   cuadricula para que se vean varias publicaciones a la vez: la pagina deja de
+   estar repintada y pasa a estar re-modelada.
+
+   No se clava ningun selector: se busca el padre comun de los <article>, y
+   despues el ancestro que limita el ancho (un max-width entre 400 y 900px). */
+function mosaico(){
+  const arts = [...document.querySelectorAll('article')].filter(a => {
+    const r = a.getBoundingClientRect(); return r.width > 200 && r.height > 100;
+  });
+  if(arts.length < 2 || innerWidth < 1200) return;
+
+  let cont = arts[0].parentElement;
+  let vueltas = 0;
+  while(cont && !arts.every(a => cont.contains(a)) && vueltas++ < 12) cont = cont.parentElement;
+  if(!cont) return;
+
+  let lim = null, e = cont, i = 0;
+  while(e && i++ < 8){
+    const mw = getComputedStyle(e).maxWidth;
+    if(mw && mw.endsWith('px')){
+      const v = parseFloat(mw);
+      if(v >= 400 && v <= 900){ lim = e; break; }
+    }
+    e = e.parentElement;
+  }
+  if(!lim) return;
+
+  cont.classList.add('au-mosaico');
+  arts.forEach((a, k) => {
+    a.classList.add('au-pieza');
+    if(k === 0) a.classList.add('au-pieza-grande');
+  });
+  lim.classList.add('au-ancho');
+  /* los contenedores intermedios tambien traen su propio ancho */
+  let t = cont, n = 0;
+  while(t && t !== lim && n++ < 10){ t.classList.add('au-tramo'); t = t.parentElement; }
+}
+
+/* ============ 2c. LOS ICONOS DEL TEMA ============
+   Los dibuja la conexion, porque el tema puede ser cualquier cosa: si alguien
+   pide "serpientes en un desierto" no hay biblioteca fija que lo cubra.
+   Aqui se valida lo que llega y, si no sirve, se cae a marcas geometricas
+   que igual se ven intencionales. */
+const D_VALIDO = /^[MmLlHhVvCcSsQqTtAaZz0-9eE ,.\-+]+$/;
+
+/* marcas neutras: si la conexion no manda iconos usables, esto no parece un error */
+const RESPALDO = [
+  'M12 2 22 12 12 22 2 12Z',
+  'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z',
+  'M3 3h18v18H3Zm4 4v10h10V7Z',
+  'M12 2 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9Z'
+];
+
+function iconosDe(d){
+  const salida = [];
+  (Array.isArray(d.iconos) ? d.iconos : []).forEach(ic => {
+    const p = String(ic && ic.d || '').trim().replace(/\s+/g, ' ');
+    if(p.length > 20 && p.length < 4000 && /^[Mm]/.test(p) && D_VALIDO.test(p))
+      salida.push(p);
+  });
+  while(salida.length < 4) salida.push(RESPALDO[salida.length % RESPALDO.length]);
+  return salida.slice(0, 4);
+}
+
+/* un <svg> como texto, para meterlo en innerHTML o en un data URI */
+function svgIcono(d, tam, color, op){
+  return '<svg viewBox="0 0 24 24" width="' + tam + '" height="' + tam +
+    '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<path fill="' + color + '"' + (op != null ? ' opacity="' + op + '"' : '') +
+    ' d="' + d + '"/></svg>';
 }
 
 /* ============ 3. FUENTES QUE EXISTEN SIN BAJAR NADA ============ */
@@ -150,9 +255,10 @@ function vestir(d){
                                     : '0 6px 20px rgba(0,0,0,' + (oscuro ? '.35' : '.10') + ')');
   p.setProperty('--au-ls',     duro ? '.03em' : 'normal');
   p.setProperty('--au-pixel',  duro ? 'pixelated' : 'auto');
-  p.setProperty('--au-canvas', duro ? 'hidden' : 'visible');
   p.setProperty('--au-avatar-r', duro ? (d.radio || '0px') : '50%');
+  p.setProperty('--au-acento-suave', oscuro ? aclarar(d.fondo, 30) : mezclar(d.acento, .86));
 
+  AU.iconos = iconosDe(d);
   fondo(d);
   barra(d);
   tarjeta(d);
@@ -164,14 +270,18 @@ function vestir(d){
 function fondo(d){
   const a = conAlfa(d.acento, d.oscuro ? .26 : .40);
   const b = conAlfa(d.acento2, d.oscuro ? .22 : .34);
-  /* OJO: los motivos se quedan como arreglo. Si se juntan en un texto y se
-     indexa con [0], sale MEDIO emoji y encodeURIComponent tira "URI malformed". */
-  const m = (Array.isArray(d.motivos) && d.motivos.length ? d.motivos : ['✨']);
-  const pieza = i => m[i % m.length];
+  /* el patron se dibuja con los paths del tema, no con emojis: un emoji
+     partido a la mitad rompe encodeURIComponent, y ademas se ve generico */
+  const ic = AU.iconos;
+  const tinta = d.oscuro ? '%23ffffff' : '%23000000';
+  const pon = (p, x, y, esc, o) =>
+    '<g transform="translate(' + x + ',' + y + ') scale(' + esc + ')">' +
+    '<path fill="' + (d.oscuro ? '#ffffff' : '#000000') + '" opacity="' + o + '" d="' + p + '"/></g>';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200">' +
-    '<text x="30" y="52" font-size="26" opacity=".07">' + pieza(0) + '</text>' +
-    '<text x="150" y="110" font-size="20" opacity=".06">' + pieza(1) + '</text>' +
-    '<text x="70" y="170" font-size="22" opacity=".06">' + pieza(2) + '</text>' +
+    pon(ic[0], 22, 26, 1.15, .075) +
+    pon(ic[1], 140, 96, .95, .06) +
+    pon(ic[2], 64, 150, 1.05, .065) +
+    pon(ic[3], 182, 12, .8, .05) +
     '</svg>';
   let patron = '';
   try { patron = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '"),'; }
@@ -186,33 +296,74 @@ function fondo(d){
   e.setProperty('background-color', d.fondo, 'important');
 }
 
+/* La barra: tres zonas con un contenedor interno centrado. El problema no era
+   la altura sino que el contenido quedaba pegado a los dos bordes de una pantalla
+   ancha, con un hueco muerto en el medio. Ahora el centro lo ocupa el chip del
+   tema, con los tres colores reales de la paleta. */
 function barra(d){
   let b = document.getElementById('au-barra');
   if(!b){ b = document.createElement('div'); b.id = 'au-barra'; document.body.appendChild(b); }
   b.innerHTML = '';
-  const t = document.createElement('b'); t.textContent = 'API UNIVERSAL';
-  const s = document.createElement('span'); s.className = 'au-sep';
-  s.textContent = 'vistiendo esta página · ' + (d.titulo || '');
-  const m = document.createElement('span'); m.className = 'au-motivos';
-  m.textContent = (d.motivos || []).join('');
+
+  const int = document.createElement('div'); int.className = 'au-int';
+
+  const marca = document.createElement('div'); marca.className = 'au-marca';
+  const sello = document.createElement('span'); sello.className = 'au-marca-sello';
+  sello.innerHTML = svgIcono(AU.iconos[0], 15, 'currentColor');
+  const nom = document.createElement('span'); nom.className = 'au-marca-txt';
+  nom.innerHTML = 'API <b>UNIVERSAL</b>';
+  marca.append(sello, nom);
+
+  const chip = document.createElement('div'); chip.className = 'au-chip';
+  const pal = document.createElement('span'); pal.className = 'au-paleta';
+  [d.acento, d.acento2, d.fondo].forEach(c => {
+    const i = document.createElement('i'); i.style.background = c; pal.appendChild(i);
+  });
+  const cajaTxt = document.createElement('span'); cajaTxt.className = 'au-chip-txt';
+  const cap = document.createElement('span'); cap.className = 'au-chip-cap';
+  cap.textContent = 'vistiendo esta página';
+  const tit = document.createElement('span'); tit.className = 'au-chip-nom';
+  tit.textContent = d.titulo || 'Tu tema';
+  cajaTxt.append(cap, tit);
+  chip.append(pal, cajaTxt);
+
+  const acc = document.createElement('div'); acc.className = 'au-acc';
+  const ic = document.createElement('span'); ic.className = 'au-motivos';
+  ic.innerHTML = AU.iconos.map(p => svgIcono(p, 16, 'currentColor')).join('');
   const x = document.createElement('button'); x.className = 'au-x'; x.textContent = 'Quitar';
   x.onclick = quitar;
-  b.append(t, s, m, x);
+  acc.append(ic, x);
+
+  int.append(marca, chip, acc);
+  b.appendChild(int);
 }
 
+/* La tarjeta: una placa con ancla a la izquierda, no una tira de 960px.
+   El fondo va de papel y NO de degradado completo: los colores los elige un
+   modelo, y texto claro sobre dos colores cualesquiera se puede volver
+   ilegible. El color fuerte se concentra en el sello. */
 function tarjeta(d){
   const destino = document.querySelector('main[role="main"]') || document.querySelector('main') || document.body;
   let c = document.getElementById('au-tarjeta');
   if(!c){ c = document.createElement('div'); c.id = 'au-tarjeta'; destino.prepend(c); }
   else if(c.parentElement !== destino) destino.prepend(c);
   c.innerHTML = '';
+
+  const sello = document.createElement('div'); sello.className = 'au-sello';
+  sello.innerHTML = svgIcono(AU.iconos[0], 40, 'currentColor');
+
+  const cuerpo = document.createElement('div'); cuerpo.className = 'au-cuerpo';
   const et = document.createElement('span'); et.className = 'au-etiqueta';
   et.textContent = 'Armado por la conexión';
   const h = document.createElement('h2'); h.textContent = d.titulo || 'Tu página';
   const p = document.createElement('p'); p.textContent = d.bienvenida || '';
-  const dec = document.createElement('span'); dec.className = 'au-deco';
-  dec.textContent = (d.motivos || []).join('');
-  c.append(et, h, p, dec);
+  cuerpo.append(et, h, p);
+
+  const cinta = document.createElement('div'); cinta.className = 'au-cinta';
+  cinta.innerHTML = AU.iconos.concat(AU.iconos).map(
+    q => svgIcono(q, 22, 'currentColor')).join('');
+
+  c.append(sello, cuerpo, cinta);
 }
 
 function quitar(){

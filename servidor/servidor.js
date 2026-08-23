@@ -96,7 +96,7 @@ Devolve SOLO este JSON:
 {
  "titulo": "nombre corto para la pagina, maximo 4 palabras, que vaya con ${r.tema}",
  "bienvenida": "dos frases que presenten la pagina, en español de Guatemala, tuteando",
- "motivos": [4 emojis que vayan con ${r.tema}],
+ "iconos": [4 objetos {"id":"nombre corto","d":"el atributo d de un path SVG"}],
  "acento": "#hex",
  "acento2": "#hex",
  "fondo": "#hex",
@@ -110,6 +110,24 @@ Devolve SOLO este JSON:
    "titulos": [1 o 2 selectores de encabezados, si los ves]
  }
 }
+
+SOBRE LOS ICONOS
+Son la marca visual del tema, asi que dibujalos vos, sean lo que sean. Si el tema es
+"serpientes en un desierto", devolve una serpiente, un cactus, una duna y un sol. Si es
+"literatura grecolatina", una columna, un pergamino, una pluma y una corona de laurel.
+
+Cada icono tiene que cumplir esto o no sirve:
+- viewBox implicito "0 0 24 24". Todo el dibujo entre x=2..22 e y=2..22.
+- El campo "d" es el atributo d de UN solo <path> relleno. Nada de stroke, circle,
+  rect ni grupos: el navegador solo va a pintar ese path.
+- Silueta solida y compacta, estilo Material Symbols relleno. Tiene que leerse a 16px:
+  nada mas delgado que 1.5 unidades.
+- Comandos M L H V C S Q T A Z, en una sola linea, terminando cada trazo con Z.
+- Si necesitas un hueco, dibujalo en sentido contrario dentro del mismo path.
+
+Ejemplos del nivel de detalle que se espera:
+  hoja:  "M12 3C7 5 4 9 4 14a6 6 0 0 0 8 5.7V13h2v6.7A6 6 0 0 0 20 14c0-5-3-9-8-11Z"
+  huella:"M7 10a2.4 2.4 0 1 1 0-4.8 2.4 2.4 0 0 1 0 4.8Zm10 0a2.4 2.4 0 1 1 0-4.8 2.4 2.4 0 0 1 0 4.8ZM4.6 15.4a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Zm14.8 0a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4ZM12 21c-3 0-5-1.6-5-3.8C7 14.4 9.2 11 12 11s5 3.4 5 6.2C17 19.4 15 21 12 21Z"
 
 Sobre "duro": ponelo en true cuando el tema pida algo firme y sin curvas
 (arcade, 8 bits, taller mecanico, deportes, videojuegos, tecnologia dura). Con duro
