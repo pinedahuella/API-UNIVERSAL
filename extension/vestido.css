@@ -32,19 +32,19 @@ html[data-au] body{
   background-color:var(--au-fondo) !important;
   color:var(--au-tinta) !important;
   font-family:var(--au-txt) !important;
-  padding-top:48px !important;
 }
 
 /* los contenedores del sitio se vuelven transparentes para que se vea el fondo */
-html[data-au] main:not([id^="au-"]),
-html[data-au] main div:not([id^="au-"]):not([id^="au-"] *):not(.au-flotante),
-html[data-au] main section:not([id^="au-"]),
-html[data-au] main ul:not([id^="au-"]), html[data-au] main li:not([id^="au-"]),
-html[data-au] div[role="presentation"]:not([id^="au-"]),
-html[data-au] nav, html[data-au] nav div, html[data-au] section:not([id^="au-"]),
-html[data-au] body > div:not([id^="au-"]):not(.au-flotante),
-html[data-au] body > div > div:not([id^="au-"]):not(.au-flotante),
-html[data-au] div.html-div:not([id^="au-"]):not(.au-flotante){
+html[data-au] main:not(.au-tocado),
+html[data-au] main div:not(.au-tocado):not([id^="au-"]):not([id^="au-"] *),
+html[data-au] main section:not(.au-tocado),
+html[data-au] main ul:not(.au-tocado), html[data-au] main li:not(.au-tocado),
+html[data-au] div[role="presentation"]:not(.au-tocado),
+html[data-au] nav div:not(.au-tocado),
+html[data-au] section:not(.au-tocado):not([id^="au-"]),
+html[data-au] body > div:not(.au-tocado):not([id^="au-"]),
+html[data-au] body > div > div:not(.au-tocado):not([id^="au-"]),
+html[data-au] div.html-div:not(.au-tocado):not([id^="au-"]){
   background-color:transparent !important;
 }
 
@@ -209,28 +209,6 @@ html[data-au] div[role="presentation"]:has(.au-avatar){
   padding:12px !important;
 }
 
-/* ================= EL MOSAICO =================
-   El feed pasa de una columna angosta a cuadricula. La primera publicacion
-   ocupa el ancho completo; las demas van de a dos. */
-html[data-au] .au-ancho{max-width:min(900px, 58vw) !important}
-html[data-au] .au-tramo{width:100% !important; max-width:none !important; min-width:0 !important}
-html[data-au] .au-mosaico{
-  display:grid !important;
-  grid-template-columns:repeat(2, minmax(0,1fr)) !important;
-  gap:18px !important;
-  align-items:start !important;
-}
-html[data-au] .au-mosaico > *{min-width:0 !important; max-width:100% !important}
-html[data-au] .au-pieza-grande{grid-column:1 / -1 !important}
-html[data-au] .au-pieza img, html[data-au] .au-pieza video{
-  width:100% !important; height:auto !important;
-  max-height:520px !important; object-fit:cover !important;
-}
-@media(max-width:1200px){
-  html[data-au] .au-mosaico{grid-template-columns:1fr !important}
-  html[data-au] .au-ancho{max-width:630px !important}
-}
-
 /* ================= CAMPOS ================= */
 html[data-au] .au-entrada.au-entrada{
   background-color:var(--au-papel) !important;
@@ -247,6 +225,7 @@ html[data-au] .au-entrada::placeholder{color:var(--au-tinta2) !important}
    Cajitas de medida justa. Al cambiar la tipografia el texto crece y saca
    una barra de scroll que se ve como un control roto. Se recortan. */
 html[data-au] .au-nota.au-nota{
+  background-color:transparent !important;
   overflow:hidden !important;
   padding:4px 7px !important;
   box-sizing:border-box !important;
@@ -287,126 +266,32 @@ html[data-au] div.au-flotante.au-flotante{
 }
 
 /* ================= LO NUESTRO ================= */
-html[data-au] /* ================= LA BARRA =================
-   Tres zonas dentro de un contenedor centrado. Sin el contenedor, en una
-   pantalla de 1900px el contenido queda pegado a los bordes y el centro
-   se ve vacio. Todo va prefijado con #au-barra para ganarle por id a
-   cualquier !important del sitio. */
-#au-barra{
-  position:fixed; top:0; left:0; right:0; z-index:2147483000;
-  background:var(--au-acento) !important;
-  color:var(--au-sobre-acento, #fff);
-  font-family:var(--au-txt);
-  border-bottom:var(--au-borde) solid rgba(0,0,0,.18);
-  box-shadow:0 2px 16px rgba(0,0,0,.22);
-}
-#au-barra .au-int{
-  max-width:1180px; margin:0 auto; height:48px;
-  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
-  gap:16px; padding:0 18px; position:relative;
-}
-/* el centro encendido: sin esto el hueco del medio se lee como vacio */
-#au-barra .au-int::before{
-  content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  width:min(520px,60%); height:150%; pointer-events:none;
-  background:radial-gradient(closest-side, rgba(255,255,255,.20), transparent 72%);
-}
-
-#au-barra .au-marca{display:flex; align-items:center; gap:9px; min-width:0}
-#au-barra .au-marca-sello{
-  width:26px; height:26px; flex:none; display:grid; place-items:center;
-  background:rgba(255,255,255,.2); border-radius:calc(var(--au-radio) / 2);
-}
-#au-barra .au-marca-sello svg{display:block}
-#au-barra .au-marca-txt{
-  font-family:var(--au-tit); font-size:13px; letter-spacing:.06em;
-  text-transform:uppercase; white-space:nowrap; opacity:.92;
-}
-#au-barra .au-marca-txt b{font-weight:800; opacity:1}
-
-#au-barra .au-chip{
-  position:relative; z-index:1;
-  display:flex !important; align-items:center; gap:10px;
-  background:var(--au-papel) !important; color:var(--au-tinta) !important;
-  border:var(--au-borde) solid var(--au-linea);
-  border-radius:var(--au-radio);
-  padding:5px 14px 5px 10px; max-width:min(460px,44vw);
-  box-shadow:0 3px 12px rgba(0,0,0,.18);
-}
-#au-barra .au-paleta{display:flex; gap:3px; flex:none}
-#au-barra .au-paleta i{
-  width:9px; height:9px; border-radius:50%;
-  border:1px solid rgba(127,127,127,.35); display:block;
-}
-#au-barra .au-chip-txt{display:flex; flex-direction:column; min-width:0; line-height:1.15}
-#au-barra .au-chip-cap{
-  font-size:8.5px; letter-spacing:.15em; text-transform:uppercase;
-  color:var(--au-tinta2); white-space:nowrap;
-}
-#au-barra .au-chip-nom{
-  font-family:var(--au-tit); font-size:13px; font-weight:800;
-  letter-spacing:var(--au-ls); text-transform:var(--au-tt);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-
-#au-barra .au-acc{display:flex; align-items:center; gap:12px; justify-content:flex-end; min-width:0}
-#au-barra .au-motivos{display:flex; gap:7px; opacity:.85}
-#au-barra .au-motivos svg{display:block}
-#au-barra .au-x{
-  border:1px solid currentColor; background:transparent;
-  color:inherit; border-radius:999px; padding:5px 14px;
-  font-family:var(--au-txt); font-size:12px; font-weight:600; cursor:pointer;
-  white-space:nowrap; transition:background .15s;
-}
-#au-barra .au-x:hover{background:rgba(255,255,255,.3)}
-
-/* ================= LA TARJETA =================
-   Una placa con ancla a la izquierda. El fondo NO lleva el degradado completo:
-   los colores los elige un modelo y texto claro sobre dos colores cualesquiera
-   se puede volver ilegible. El color fuerte se concentra en el sello. */
-#au-tarjeta{
-  position:relative; z-index:1; margin:0 auto 24px !important; max-width:720px !important;
-  display:grid !important; grid-template-columns:auto 1fr !important;
-  gap:20px !important; align-items:center !important;
-  background:var(--au-papel) !important; color:var(--au-tinta) !important;
+html[data-au] /* ================= EL BOTON FLOTANTE =================
+   Lo unico nuestro que se queda en la pagina. Cerrado es un circulo del tamaño
+   de un icono; al pasar el mouse se abre y dice "Quitar". */
+#au-boton{
+  position:fixed; left:16px; bottom:16px; z-index:2147483000;
+  display:flex; align-items:center; gap:0;
+  height:38px; padding:0; width:38px;
+  background:var(--au-papel); color:var(--au-tinta);
   border:var(--au-borde) solid var(--au-acento);
-  border-radius:var(--au-radio);
-  padding:20px 24px; overflow:hidden;
-  box-shadow:var(--au-sombra);
-  font-family:var(--au-txt);
+  border-radius:999px;
+  font-family:var(--au-txt); font-size:12px; font-weight:700;
+  cursor:pointer; box-shadow:var(--au-sombra);
+  opacity:.5; overflow:hidden;
+  transition:width .22s cubic-bezier(.4,0,.2,1), opacity .2s, gap .22s;
 }
-#au-tarjeta .au-sello{
-  width:78px !important; height:78px !important; flex:none; display:grid !important;
-  place-items:center;
-  background:linear-gradient(135deg, var(--au-acento), var(--au-acento2)) !important;
-  border-radius:var(--au-radio); color:#fff;
-  box-shadow:0 6px 18px rgba(0,0,0,.2);
-}
-#au-tarjeta .au-sello svg{display:block}
-#au-tarjeta .au-cuerpo{min-width:0}
-#au-tarjeta .au-etiqueta{
-  display:inline-block; margin-bottom:8px;
-  background:var(--au-acento-suave, rgba(127,127,127,.14));
+#au-boton:hover, #au-boton:focus-visible{opacity:1; width:112px; gap:8px}
+#au-boton .au-b-ico{
+  width:38px; height:38px; flex:none; display:grid; place-items:center;
   color:var(--au-acento);
-  border-radius:999px; padding:3px 11px;
-  font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
 }
-#au-tarjeta h2{
-  margin:0 0 6px; font-family:var(--au-tit);
-  font-size:26px !important; line-height:1.2; letter-spacing:var(--au-ls);
-  text-transform:var(--au-tt); color:var(--au-tinta);
+#au-boton .au-b-ico svg{display:block}
+#au-boton .au-b-txt{
+  white-space:nowrap; opacity:0; transition:opacity .18s;
+  font-family:var(--au-tit); letter-spacing:var(--au-ls);
 }
-#au-tarjeta p{
-  margin:0; font-size:14px; line-height:1.6;
-  color:var(--au-tinta2); max-width:56ch;
-}
-/* la cinta de iconos: marca de agua sobre el borde inferior, no relleno suelto */
-#au-tarjeta .au-cinta{
-  position:absolute; left:0; right:0; bottom:-6px; height:30px;
-  display:flex; gap:26px; justify-content:center; align-items:center;
-  color:var(--au-acento); opacity:.14; pointer-events:none;
-}
-#au-tarjeta .au-cinta svg{display:block; flex:none}
+#au-boton:hover .au-b-txt, #au-boton:focus-visible .au-b-txt{opacity:1}
 
 #au-aviso{background:#ffffff !important}
 html[data-au] #au-aviso, html[data-au] #au-aviso *{color:#12171f !important}
@@ -495,24 +380,7 @@ html[data-au] #au-aviso, html[data-au] #au-aviso *{color:#12171f !important}
 @keyframes au-corre{to{left:105%}}
 
 /* ================= TELEFONO ================= */
-@media(max-width:900px){
-  #au-barra .au-int{grid-template-columns:auto 1fr auto; gap:10px; padding:0 12px}
-  #au-barra .au-motivos{display:none}
-  #au-barra .au-chip{max-width:none}
-}
 @media(max-width:640px){
-  #au-barra .au-int{height:44px; gap:8px; padding:0 10px}
-  #au-barra .au-marca-txt{display:none}
-  #au-barra .au-chip{padding:4px 10px 4px 8px}
-  #au-barra .au-chip-nom{font-size:12px}
-  #au-barra .au-x{padding:4px 11px; font-size:11px}
-  html[data-au] body{padding-top:44px !important}
-
-  #au-tarjeta{
-    grid-template-columns:1fr; gap:14px; padding:16px 18px; margin-bottom:16px;
-  }
-  #au-tarjeta .au-sello{width:56px; height:56px}
-  #au-tarjeta h2{font-size:20px !important}
-  #au-tarjeta .au-cinta{gap:16px; opacity:.10}
-  #au-aviso{left:10px; right:10px; bottom:10px; max-width:none}
+  #au-boton{left:10px; bottom:10px}
+  #au-aviso{left:10px; right:10px; bottom:60px; max-width:none}
 }

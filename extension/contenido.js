@@ -53,10 +53,13 @@ function estructura(){
 }
 
 /* ============ 2. CLASIFICAR MIDIENDO ============ */
+/* au-tocado va en TODO lo que clasificamos. La regla que vuelve transparentes
+   los contenedores del sitio le gana en especificidad a las clases sueltas
+   (main div = mas peso que .au-btn.au-btn), asi que en vez de perseguir caso
+   por caso, esa regla excluye .au-tocado y cada clase define su propio fondo. */
 const CLASES = ['au-btn','au-fila','au-caja','au-avatar','au-media',
                 'au-panel','au-entrada','au-icono','au-nota','au-enlace',
-                'au-grande','au-flotante',
-                'au-mosaico','au-pieza','au-pieza-grande','au-ancho','au-tramo'];
+                'au-grande','au-flotante','au-tocado'];
 
 function clasificar(){
   document.querySelectorAll('.' + CLASES.join(',.')).forEach(e => e.classList.remove(...CLASES));
@@ -133,48 +136,9 @@ function clasificar(){
   document.querySelectorAll('nav, [role="navigation"]')
     .forEach(e => { if(vis(e)){ e.classList.add('au-panel'); n.panel++; } });
 
-  mosaico();
+  document.querySelectorAll('.au-btn,.au-fila,.au-caja,.au-panel,.au-entrada,.au-nota,.au-flotante,.au-icono,.au-enlace')
+    .forEach(e => e.classList.add('au-tocado'));
   return n;
-}
-
-/* ============ 2b. EL MOSAICO ============
-   El feed del sitio es una sola columna angosta. Aqui se ensancha y se pasa a
-   cuadricula para que se vean varias publicaciones a la vez: la pagina deja de
-   estar repintada y pasa a estar re-modelada.
-
-   No se clava ningun selector: se busca el padre comun de los <article>, y
-   despues el ancestro que limita el ancho (un max-width entre 400 y 900px). */
-function mosaico(){
-  const arts = [...document.querySelectorAll('article')].filter(a => {
-    const r = a.getBoundingClientRect(); return r.width > 200 && r.height > 100;
-  });
-  if(arts.length < 2 || innerWidth < 1200) return;
-
-  let cont = arts[0].parentElement;
-  let vueltas = 0;
-  while(cont && !arts.every(a => cont.contains(a)) && vueltas++ < 12) cont = cont.parentElement;
-  if(!cont) return;
-
-  let lim = null, e = cont, i = 0;
-  while(e && i++ < 8){
-    const mw = getComputedStyle(e).maxWidth;
-    if(mw && mw.endsWith('px')){
-      const v = parseFloat(mw);
-      if(v >= 400 && v <= 900){ lim = e; break; }
-    }
-    e = e.parentElement;
-  }
-  if(!lim) return;
-
-  cont.classList.add('au-mosaico');
-  arts.forEach((a, k) => {
-    a.classList.add('au-pieza');
-    if(k === 0) a.classList.add('au-pieza-grande');
-  });
-  lim.classList.add('au-ancho');
-  /* los contenedores intermedios tambien traen su propio ancho */
-  let t = cont, n = 0;
-  while(t && t !== lim && n++ < 10){ t.classList.add('au-tramo'); t = t.parentElement; }
 }
 
 /* ============ 2c. LOS ICONOS DEL TEMA ============
@@ -304,8 +268,7 @@ function vestir(d){
 
   AU.iconos = iconosDe(d);
   fondo(d);
-  barra(d);
-  tarjeta(d);
+  boton(d);
   clasificar();
   AU.puesto = true;
 }
@@ -340,79 +303,26 @@ function fondo(d){
   e.setProperty('background-color', d.fondo, 'important');
 }
 
-/* La barra: tres zonas con un contenedor interno centrado. El problema no era
-   la altura sino que el contenido quedaba pegado a los dos bordes de una pantalla
-   ancha, con un hueco muerto en el medio. Ahora el centro lo ocupa el chip del
-   tema, con los tres colores reales de la paleta. */
-function barra(d){
-  let b = document.getElementById('au-barra');
-  if(!b){ b = document.createElement('div'); b.id = 'au-barra'; document.body.appendChild(b); }
+/* Lo unico nuestro que queda en la pagina. Nada de barra ni de tarjeta: tapaban
+   el logo del sitio y hacian que se viera intervenida en vez de re-vestida.
+   Un circulo discreto que se abre a "Quitar" cuando le pasas el mouse. */
+function boton(d){
+  let b = document.getElementById('au-boton');
+  if(!b){ b = document.createElement('button'); b.id = 'au-boton'; document.body.appendChild(b); }
   b.innerHTML = '';
-
-  const int = document.createElement('div'); int.className = 'au-int';
-
-  const marca = document.createElement('div'); marca.className = 'au-marca';
-  const sello = document.createElement('span'); sello.className = 'au-marca-sello';
-  sello.innerHTML = svgIcono(AU.iconos[0], 15, 'currentColor');
-  const nom = document.createElement('span'); nom.className = 'au-marca-txt';
-  nom.innerHTML = 'API <b>UNIVERSAL</b>';
-  marca.append(sello, nom);
-
-  const chip = document.createElement('div'); chip.className = 'au-chip';
-  const pal = document.createElement('span'); pal.className = 'au-paleta';
-  [d.acento, d.acento2, d.fondo].forEach(c => {
-    const i = document.createElement('i'); i.style.background = c; pal.appendChild(i);
-  });
-  const cajaTxt = document.createElement('span'); cajaTxt.className = 'au-chip-txt';
-  const cap = document.createElement('span'); cap.className = 'au-chip-cap';
-  cap.textContent = 'vistiendo esta página';
-  const tit = document.createElement('span'); tit.className = 'au-chip-nom';
-  tit.textContent = d.titulo || 'Tu tema';
-  cajaTxt.append(cap, tit);
-  chip.append(pal, cajaTxt);
-
-  const acc = document.createElement('div'); acc.className = 'au-acc';
-  const ic = document.createElement('span'); ic.className = 'au-motivos';
-  ic.innerHTML = AU.iconos.map(p => svgIcono(p, 16, 'currentColor')).join('');
-  const x = document.createElement('button'); x.className = 'au-x'; x.textContent = 'Quitar';
-  x.onclick = quitar;
-  acc.append(ic, x);
-
-  int.append(marca, chip, acc);
-  b.appendChild(int);
-}
-
-/* La tarjeta: una placa con ancla a la izquierda, no una tira de 960px.
-   El fondo va de papel y NO de degradado completo: los colores los elige un
-   modelo, y texto claro sobre dos colores cualesquiera se puede volver
-   ilegible. El color fuerte se concentra en el sello. */
-function tarjeta(d){
-  const destino = document.querySelector('main[role="main"]') || document.querySelector('main') || document.body;
-  let c = document.getElementById('au-tarjeta');
-  if(!c){ c = document.createElement('div'); c.id = 'au-tarjeta'; destino.prepend(c); }
-  else if(c.parentElement !== destino) destino.prepend(c);
-  c.innerHTML = '';
-
-  const sello = document.createElement('div'); sello.className = 'au-sello';
-  sello.innerHTML = svgIcono(AU.iconos[0], 40, 'currentColor');
-
-  const cuerpo = document.createElement('div'); cuerpo.className = 'au-cuerpo';
-  const et = document.createElement('span'); et.className = 'au-etiqueta';
-  et.textContent = 'Armado por la conexión';
-  const h = document.createElement('h2'); h.textContent = d.titulo || 'Tu página';
-  const p = document.createElement('p'); p.textContent = d.bienvenida || '';
-  cuerpo.append(et, h, p);
-
-  const cinta = document.createElement('div'); cinta.className = 'au-cinta';
-  cinta.innerHTML = AU.iconos.concat(AU.iconos).map(
-    q => svgIcono(q, 22, 'currentColor')).join('');
-
-  c.append(sello, cuerpo, cinta);
+  b.title = 'Quitar el diseño';
+  b.setAttribute('aria-label', 'Quitar el diseño');
+  const ico = document.createElement('span'); ico.className = 'au-b-ico';
+  ico.innerHTML = svgIcono(AU.iconos[0], 17, 'currentColor');
+  const txt = document.createElement('span'); txt.className = 'au-b-txt';
+  txt.textContent = 'Quitar';
+  b.append(ico, txt);
+  b.onclick = quitar;
 }
 
 function quitar(){
   document.documentElement.removeAttribute('data-au');
-  ['au-barra','au-tarjeta','au-aviso','au-intro'].forEach(id => document.getElementById(id)?.remove());
+  ['au-boton','au-aviso','au-intro','au-medidor'].forEach(id => document.getElementById(id)?.remove());
   ['background-image','background-repeat','background-attachment','background-color']
     .forEach(k => document.body.style.removeProperty(k));
   document.querySelectorAll('.' + CLASES.join(',.')).forEach(e => e.classList.remove(...CLASES));
@@ -576,7 +486,7 @@ function vigilar(){
     clearTimeout(t);
     t = setTimeout(() => {
       if(!AU.guardado || !AU.puesto) return;
-      if(!document.getElementById('au-barra')) vestir(AU.guardado.d);
+      if(!document.getElementById('au-boton')) vestir(AU.guardado.d);
       else clasificar();
     }, 400);
   });
