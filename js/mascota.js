@@ -174,45 +174,49 @@ function guardar(id, valor){
 }
 
 /* ---------------- construir la pagina ---------------- */
-const ESPERAS = [
-  ['Dame un segundo.', 'Te estoy armando la página...'],
-  ['Escogiendo los colores que te van...'],
-  ['Buscándote contenido de eso...'],
-  ['Casi. No quiero entregarte algo feo.']
-];
-
 async function construir(){
   q('#responde').innerHTML = '';
+  q('#ico').textContent = '';
   focaEstado('pensando');
   q('#progreso').classList.add('trabajando');
+  decir(['Dame un segundo.', 'Te estoy armando la página...']);
 
-  let n = 0;
-  decir(ESPERAS[0]);
-  const charla = setInterval(() => { n++; decir(ESPERAS[n % ESPERAS.length]); }, 5200);
+  /* Entramos ya con lo que podemos armar aquí mismo. Si el diseño de Claude
+     llega después, la página se vuelve a vestir sola y se ve el cambio. */
+  await new Promise(r => setTimeout(r, 2600));
 
-  let d = null, fuente = 'local';
-  try {
-    const crudo = await Promise.race([
-      pedido || Promise.resolve(null),
-      new Promise(r => setTimeout(() => r(null), 75000))
-    ]);
-    if(crudo && Array.isArray(crudo.videos)){ d = crudo; fuente = 'claude'; }
-  } catch(e){ /* sin servidor */ }
-
-  clearInterval(charla);
-
-  if(!d) d = generarLocal(R);
-  d = sanear(d);
-  d = segunElAnimo(d, R.animo);
-
+  const local = segunElAnimo(sanear(generarLocal(R)), R.animo);
   focaEstado('listo');
   q('#progreso').classList.remove('trabajando');
-  decir([d.bienvenida || `Listo, ${R.nombre}. Mirá cómo te quedó.`], () => {
-    setTimeout(() => arrancarApp(d, fuente), 1000);
+
+  decir([local.bienvenida], () => {
+    setTimeout(() => {
+      arrancarApp(local, 'local');
+      esperarAClaude();
+    }, 900);
   });
 }
 
-/* lo que eligio en las ultimas dos preguntas se aplica encima */
+/* cuando Claude termina, la pagina se re-viste delante de la persona */
+function esperarAClaude(){
+  if(!pedido) return;
+  pedido.then(crudo => {
+    if(!crudo || !Array.isArray(crudo.videos) || !crudo.videos.length) return;
+    if(!u) return;
+    const d = segunElAnimo(sanear(crudo), R.animo);
+    registrarTema(d);
+    u.pesos = {};
+    TEMAS.forEach(t => u.pesos[t.id] = 0);
+    u.pesos['propio'] = 16;
+    d.intereses.forEach((x,i) => u.pesos[x] = 9 - i * 3);
+    u.diseno = Object.assign({}, d, { intereses:['propio'].concat(d.intereses) });
+    u.fuente = 'claude';
+    salvar();
+    pintar(d.bienvenida || 'Le di una segunda pensada y te la dejé mejor.');
+  }).catch(() => {});
+}
+
+/* lo que eligio en las ultimas dos preguntas se aplica encima del diseño */
 function segunElAnimo(d, animo){
   const a = ANIMO[animo];
   if(!a) return d;
@@ -258,10 +262,25 @@ const EMOJI_PISTAS = [
   [['dinero','negocio','emprend','finanz','invers'],'📈','#1f7a5c','#5cbf9a','#eaf6f1',['💼','💰','📊','🤝']]
 ];
 
+/* saca un nombre presentable de lo que la persona escribio */
+function titular(txt){
+  let n = txt.toLowerCase()
+    .replace(/^(a\s+mi\s+)?(me\s+)?(gusta|gustan|encanta|encantan|amo|adoro|prefiero)\s+/i, '')
+    .replace(/^(mucho|bastante|full)\s+/i, '')
+    .replace(/^(ver|leer|jugar|coleccionar|hacer|escuchar|cocinar|practicar|estudiar|armar)\s+/i, '')
+    .replace(/^(el|la|los|las|un|una|unos|unas)\s+/i, '')
+    .split(/[,.;]| y | e /)[0].trim();
+  if(n.length > 26) n = n.slice(0,26).replace(/\s+\S*$/, '');
+  n = n.replace(/\s+(de|del|la|el|en|con|por)$/i, '').trim();
+  if(!n) n = 'Lo tuyo';
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+
 function inventarTema(txt){
   const t = txt.toLowerCase();
+  const pal = t.normalize('NFD').replace(/[̀-ͯ]/g,'').split(/[^a-z0-9]+/).filter(Boolean);
   for(const [claves, emoji, c1, c2, fondo, motivos] of EMOJI_PISTAS){
-    if(claves.some(k => t.includes(k))){
+    if(claves.some(k => pal.some(w => w === k || w.startsWith(k)))){
       return { emoji, color:c1, c2, fondo, motivos, oscuro: fondo.length === 7 && parseInt(fondo.slice(1,3),16) < 60 };
     }
   }
@@ -273,9 +292,15 @@ function inventarTema(txt){
 
 function generarLocal(r){
   const txt = (r.gustos || '').toLowerCase();
+  /* por palabra completa: 'ia' no puede matchear dentro de 'historia' */
+  const palabras = txt.normalize('NFD').replace(/[̀-ͯ]/g,'').split(/[^a-z0-9]+/).filter(Boolean);
   const puntos = {};
   Object.entries(CLAVES).forEach(([id, ps]) => {
-    ps.forEach(p => { if(txt.includes(p)) puntos[id] = (puntos[id] || 0) + 1; });
+    ps.forEach(clave => {
+      const c = clave.normalize('NFD').replace(/[̀-ͯ]/g,'');
+      if(palabras.some(w => w === c || (c.length >= 5 && w.startsWith(c))))
+        puntos[id] = (puntos[id] || 0) + 1;
+    });
   });
   const elegidos = Object.entries(puntos).sort((a,b) => b[1] - a[1]).slice(0,2).map(([k]) => k);
   const a = ANIMO[r.animo] || ANIMO['Tranquila'];
@@ -288,9 +313,7 @@ function generarLocal(r){
     inv = { emoji:base.emoji, color:base.color, c2:base.c2,
             fondo:base.est.fondo, motivos:base.motivos, oscuro:!!base.est.oscuro };
   } else {
-    nombre = (r.gustos || 'Lo tuyo').replace(/^(me\s+)?(gusta|gustan|encanta|encantan)\s+/i,'')
-              .split(/[,.]| y /)[0].trim().slice(0,26) || 'Lo tuyo';
-    nombre = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+    nombre = titular(r.gustos || '');
     inv = inventarTema(r.gustos || '');
   }
 
@@ -375,8 +398,7 @@ function sanear(d){
 }
 
 /* ---------------- entrar a la app ---------------- */
-function arrancarApp(d, fuente){
-  /* el tema que inventó Claude se mete al catálogo como uno más */
+function registrarTema(d){
   const id = 'propio';
   const est = {
     tit:d.tit, txt:d.txt, r:d.radio, rs:d.radio, av:'50%',
@@ -401,7 +423,11 @@ function arrancarApp(d, fuente){
 
   POSTS[id] = d.posts.length ? d.posts
     : [['¿Por dónde empiezo con ' + d.propio.nombre + '?', 'Cualquier consejo me sirve.']];
+}
 
+function arrancarApp(d, fuente){
+  registrarTema(d);
+  const id = 'propio';
   const pesos = {};
   TEMAS.forEach(t => pesos[t.id] = 0);
   pesos[id] = 16;
