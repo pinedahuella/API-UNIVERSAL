@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e1016">
 <title>API UNIVERSAL</title>
-<link rel="stylesheet" href="css/styles.css?v=4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;600&family=Lora:wght@400;600&family=Playfair+Display:wght@600;800&family=Quicksand:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/styles.css?v=6">
 </head>
 <body>
 
@@ -71,9 +74,23 @@
       <button class="menu-item" data-vista="v-videos"><i>▶️</i>Videos</button>
       <button class="menu-item" data-vista="v-mensajes"><i>💬</i>Mensajes</button>
       <button class="menu-item" data-vista="v-perfil"><i>👤</i>Mi perfil</button>
-      <div class="menu-sep"></div>
-      <div class="menu-titulo">Tu página ahorita</div>
-      <div id="barras" class="barras"></div>
+
+      <div class="panel-caja">
+        <div class="panel-cabeza">
+          <span class="panel-tema" id="panel-tema"></span>
+          <div>
+            <b id="panel-titulo">Sin estilo todavía</b>
+            <span id="panel-aire">La página está en su forma neutra</span>
+          </div>
+        </div>
+        <div id="barras" class="barras"></div>
+      </div>
+
+      <div class="panel-caja">
+        <div class="menu-titulo">Lo último que aprendió</div>
+        <ul id="historial" class="historial"></ul>
+        <button class="btn ghost mini ancho" id="reiniciar2">Empezar de nuevo</button>
+      </div>
     </nav>
 
     <main class="centro">
@@ -142,6 +159,6 @@
   </div>
 </section>
 
-<script src="js/app.js?v=4"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>

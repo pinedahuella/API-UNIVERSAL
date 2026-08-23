@@ -5,25 +5,56 @@
 
 const TEMAS = [
   { id:'perros', nombre:'Perros', emoji:'🐶', color:'#e08b3a', c2:'#f0b56a',
-    motivos:['🐾','🦴','🐕','🎾'], saludo:'Guau' },
+    motivos:['🐾','🦴','🐕','🎾'], saludo:'Guau',
+    est:{ tit:"'Fredoka','Segoe UI',sans-serif", txt:"'Quicksand','Segoe UI',sans-serif",
+          r:'24px', rs:'18px', av:'50%', tt:'none', ls:'0', borde:'2px solid',
+          som:'0 6px 0 -2px rgba(224,139,58,.18)', aire:'Suelto y juguetón', fondo:'#fdf1e0', oscuro:false } },
   { id:'gatos', nombre:'Gatos', emoji:'🐱', color:'#8b5cf6', c2:'#b794f6',
-    motivos:['🧶','🐾','🐈','🐟'], saludo:'Miau' },
+    motivos:['🧶','🐾','🐈','🐟'], saludo:'Miau',
+    est:{ tit:"'Quicksand','Segoe UI',sans-serif", txt:"'Quicksand','Segoe UI',sans-serif",
+          r:'26px', rs:'20px', av:'50%', tt:'none', ls:'.01em', borde:'2px solid',
+          som:'0 8px 22px rgba(139,92,246,.14)', aire:'Suave y curvo', fondo:'#f2eaff', oscuro:false } },
   { id:'futbol', nombre:'Fútbol', emoji:'⚽', color:'#22a06b', c2:'#5fce9c',
-    motivos:['⚽','🥅','🏆','🏟️'], saludo:'Gol' },
+    motivos:['⚽','🥅','🏆','🏟️'], saludo:'Gol',
+    est:{ tit:"'Bebas Neue','Arial Narrow',sans-serif", txt:"'Space Grotesk','Segoe UI',sans-serif",
+          r:'6px', rs:'4px', av:'8px', tt:'uppercase', ls:'.06em', borde:'2px solid',
+          som:'0 4px 0 -1px rgba(34,160,107,.35)', aire:'Recto y de estadio', fondo:'#e6f6ee', oscuro:false } },
   { id:'musica', nombre:'Música', emoji:'🎧', color:'#e0407f', c2:'#f37aa8',
-    motivos:['🎵','🎸','🎹','🎶'], saludo:'Subile' },
+    motivos:['🎵','🎸','🎹','🎶'], saludo:'Subile',
+    est:{ tit:"'Playfair Display',Georgia,serif", txt:"'Lora',Georgia,serif",
+          r:'18px', rs:'14px', av:'50%', tt:'none', ls:'-.01em', borde:'1px solid',
+          som:'0 10px 26px rgba(224,64,127,.16)', aire:'De portada de disco', fondo:'#1c0f1a', papel:'#2a1826', linea:'#40243a', oscuro:true } },
   { id:'tecnologia', nombre:'Tecnología', emoji:'💻', color:'#3b76f6', c2:'#7aa5fb',
-    motivos:['⚙️','🔌','🖥️','💾'], saludo:'Arrancá' },
+    motivos:['⚙️','🔌','🖥️','💾'], saludo:'Arrancá',
+    est:{ tit:"'Space Grotesk','Segoe UI',sans-serif", txt:"'Space Grotesk','Segoe UI',sans-serif",
+          r:'8px', rs:'6px', av:'10px', tt:'none', ls:'-.02em', borde:'1px solid',
+          som:'0 2px 0 0 rgba(59,118,246,.22)', aire:'Limpio y cuadrado', fondo:'#e8f0ff', oscuro:false } },
   { id:'comida', nombre:'Comida', emoji:'🍜', color:'#e05a3a', c2:'#f38f76',
-    motivos:['🌮','🥑','🍅','🍳'], saludo:'Provecho' },
+    motivos:['🌮','🥑','🍅','🍳'], saludo:'Provecho',
+    est:{ tit:"'Playfair Display',Georgia,serif", txt:"'Lora',Georgia,serif",
+          r:'20px', rs:'16px', av:'50%', tt:'none', ls:'0', borde:'1px solid',
+          som:'0 10px 24px rgba(224,90,58,.15)', aire:'De carta de restaurante', fondo:'#fdefe6', oscuro:false } },
   { id:'viajes', nombre:'Viajes', emoji:'✈️', color:'#0e9bb5', c2:'#54c6da',
-    motivos:['🧳','🗺️','⛰️','🏝️'], saludo:'Buen viaje' },
+    motivos:['🧳','🗺️','⛰️','🏝️'], saludo:'Buen viaje',
+    est:{ tit:"'Quicksand','Segoe UI',sans-serif", txt:"'Space Grotesk','Segoe UI',sans-serif",
+          r:'22px', rs:'16px', av:'50%', tt:'none', ls:'.02em', borde:'1px dashed',
+          som:'0 8px 22px rgba(14,155,181,.16)', aire:'De boleto y mapa', fondo:'#e3f5f9', oscuro:false } },
   { id:'videojuegos', nombre:'Videojuegos', emoji:'🎮', color:'#6d4df6', c2:'#9d87fa',
-    motivos:['👾','🕹️','🎲','🏅'], saludo:'A jugar' },
+    motivos:['👾','🕹️','🎲','🏅'], saludo:'A jugar',
+    est:{ tit:"'Bebas Neue','Arial Narrow',sans-serif", txt:"'Space Grotesk','Segoe UI',sans-serif",
+          r:'2px', rs:'2px', av:'2px', tt:'uppercase', ls:'.1em', borde:'3px solid',
+          som:'6px 6px 0 0 rgba(109,77,246,.28)', aire:'De arcade, sin curvas', fondo:'#141032', papel:'#1f1a45', linea:'#332a63', oscuro:true } },
   { id:'autos', nombre:'Autos', emoji:'🚗', color:'#455571', c2:'#7d8ca6',
-    motivos:['🛞','🔧','🛣️','⛽'], saludo:'Arrancamos' },
+    motivos:['🛞','🔧','🛣️','⛽'], saludo:'Arrancamos',
+    est:{ tit:"'Bebas Neue','Arial Narrow',sans-serif", txt:"'Space Grotesk','Segoe UI',sans-serif",
+          r:'4px', rs:'3px', av:'6px', tt:'uppercase', ls:'.08em', borde:'2px solid',
+          som:'0 3px 0 0 rgba(69,85,113,.3)', aire:'De taller, todo firme', fondo:'#171d29', papel:'#212936', linea:'#333d4f', oscuro:true } },
   { id:'arte', nombre:'Arte', emoji:'🎨', color:'#c0392b', c2:'#e07a6f',
-    motivos:['🖌️','🖼️','✏️','🎭'], saludo:'A crear' }
+    motivos:['🖌️','🖼️','✏️','🎭'], saludo:'A crear',
+    est:{ tit:"'Playfair Display',Georgia,serif", txt:"'Lora',Georgia,serif",
+          r:'2px 22px 2px 22px', rs:'2px 18px 2px 18px', av:'40% 60% 55% 45%',
+          tt:'none', ls:'0', borde:'1px dashed',
+          som:'0 12px 26px rgba(192,57,43,.16)', aire:'De galería, nada simétrico', fondo:'#fceae7', oscuro:false } }
 ];
 const T = id => TEMAS.find(t => t.id === id);
 
@@ -155,25 +186,72 @@ function mezclarColor(hex, blanco){
 }
 
 /* aqui se viste toda la pagina con el tema */
+const NEUTRO = {
+  tit:"'Space Grotesk','Segoe UI',sans-serif", txt:"'Segoe UI',system-ui,sans-serif",
+  r:'16px', rs:'10px', av:'50%', tt:'none', ls:'-.02em', borde:'1px solid',
+  som:'0 2px 4px rgba(14,16,22,.04),0 12px 28px rgba(14,16,22,.07)'
+};
+
 function vestir(t){
   const raiz = document.documentElement.style;
+  const e = t ? t.est : NEUTRO;
+  raiz.setProperty('--fuente-tit', e.tit);
+  raiz.setProperty('--fuente-txt', e.txt);
+  raiz.setProperty('--r', e.r);
+  raiz.setProperty('--r-s', e.rs);
+  raiz.setProperty('--avatar-r', e.av);
+  raiz.setProperty('--tt', e.tt);
+  raiz.setProperty('--ls', e.ls);
+  raiz.setProperty('--borde', e.borde);
+  raiz.setProperty('--sombra', e.som);
+
   if(!t){
     raiz.setProperty('--acento', '#5b6cff');
     raiz.setProperty('--acento-suave', '#eef0ff');
     raiz.setProperty('--fondo', '#f6f7fb');
+    raiz.setProperty('--papel', '#ffffff');
+    raiz.setProperty('--tinta', '#0e1016');
+    raiz.setProperty('--tinta-2', '#3d4353');
+    raiz.setProperty('--tenue', '#767d8f');
     raiz.setProperty('--linea', '#e6e8f0');
     raiz.setProperty('--franja', 'linear-gradient(90deg,#5b6cff,#8b5cf6)');
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = '#f6f7fb';
     return;
   }
+
   raiz.setProperty('--acento', t.color);
-  raiz.setProperty('--acento-suave', mezclarColor(t.color, .90));
-  raiz.setProperty('--fondo', mezclarColor(t.color, .955));
-  raiz.setProperty('--linea', mezclarColor(t.color, .80));
   raiz.setProperty('--franja', `linear-gradient(90deg,${t.color},${t.c2})`);
-  document.body.style.backgroundImage = patron(t);
-  document.body.style.backgroundColor = mezclarColor(t.color, .955);
+  raiz.setProperty('--fondo', e.fondo);
+
+  if(e.oscuro){
+    raiz.setProperty('--papel', e.papel);
+    raiz.setProperty('--tinta', '#f4f6fc');
+    raiz.setProperty('--tinta-2', '#c6cddc');
+    raiz.setProperty('--tenue', '#8d95ab');
+    raiz.setProperty('--linea', e.linea);
+    raiz.setProperty('--acento-suave', e.linea);
+  } else {
+    raiz.setProperty('--papel', '#ffffff');
+    raiz.setProperty('--tinta', '#0e1016');
+    raiz.setProperty('--tinta-2', '#3d4353');
+    raiz.setProperty('--tenue', '#767d8f');
+    raiz.setProperty('--linea', mezclarColor(t.color, .74));
+    raiz.setProperty('--acento-suave', mezclarColor(t.color, .90));
+  }
+
+  const brillo = e.oscuro ? .30 : .55;
+  const lavado =
+    `radial-gradient(900px 620px at 12% -8%, ${conAlfa(t.color, brillo)}, transparent 62%),` +
+    `radial-gradient(760px 560px at 102% 104%, ${conAlfa(t.c2, brillo)}, transparent 60%)`;
+  document.body.style.backgroundImage = patron(t) + ',' + lavado;
+  document.body.style.backgroundRepeat = 'repeat,no-repeat,no-repeat';
+  document.body.style.backgroundColor = e.fondo;
+}
+
+function conAlfa(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
 }
 
 /* ---------------- acceso ---------------- */
@@ -196,7 +274,7 @@ $('#p-registro').onsubmit = e => {
   err.textContent = '';
   const pesos = {};
   TEMAS.forEach(t => pesos[t.id] = 0);
-  entrar({ user, nombre, pass, pesos, vistos:[], marcados:[], coment:{} }, true);
+  entrar({ user, nombre, pass, pesos, vistos:[], marcados:[], coment:{}, hist:[] }, true);
 };
 
 $('#p-login').onsubmit = e => {
@@ -222,15 +300,17 @@ $('#salir').onclick = () => {
   irPanel('p-login');
 };
 
-$('#reiniciar').onclick = () => {
+const reiniciar = () => {
   TEMAS.forEach(t => u.pesos[t.id] = 0);
-  u.vistos = []; u.marcados = []; u.coment = {};
+  u.vistos = []; u.marcados = []; u.coment = {}; u.hist = [];
   salvar();
   videoActual = null;
   $('#reproductor-caja').hidden = true;
   vista('v-inicio');
   pintar('Volviste a empezar. La página ya no sabe nada de vos.');
 };
+$('#reiniciar').onclick = reiniciar;
+$('#reiniciar2').onclick = reiniciar;
 
 /* ---------------- entrar ---------------- */
 function entrar(usuario, nuevo){
@@ -280,17 +360,33 @@ function banner(r, mensaje){
 
 function barras(r){
   const c = $('#barras');
+  const cab = $('#panel-tema'), tit = $('#panel-titulo'), aire = $('#panel-aire');
+
   if(!r.conoce){
+    cab.textContent = '🎬';
+    tit.textContent = 'Sin estilo todavía';
+    aire.textContent = 'La página está en su forma neutra';
     c.innerHTML = '<p class="vacio-txt">Vacío por ahora. Se va a llenar con lo que abras.</p>';
-    return;
+  } else {
+    const t = T(r.principal);
+    cab.textContent = t.emoji;
+    tit.textContent = 'Estilo ' + t.nombre;
+    aire.textContent = t.est.aire;
+    c.innerHTML = r.reparto.map(x => {
+      const y = T(x.t);
+      return `<div class="barra-item">
+        <div><b>${y.emoji} ${y.nombre}</b><span>${x.pct}%</span></div>
+        <div class="pista"><i style="width:${x.pct}%;background:${y.color}"></i></div>
+      </div>`;
+    }).join('');
   }
-  c.innerHTML = r.reparto.map(x => {
-    const t = T(x.t);
-    return `<div class="barra-item">
-      <div><b>${t.emoji} ${t.nombre}</b><span>${x.pct}%</span></div>
-      <div class="pista"><i style="width:${x.pct}%;background:${t.color}"></i></div>
-    </div>`;
-  }).join('');
+
+  const h = $('#historial');
+  const lista = (u.hist || []).slice(0,4);
+  h.innerHTML = lista.length
+    ? lista.map(x => `<li><span class="h-ico" style="background:${T(x.t).color}">${T(x.t).emoji}</span>
+        <span class="h-txt">${x.txt}<b>+${x.n}</b></span></li>`).join('')
+    : '<li class="vacio-txt">Todavía no hiciste nada.</li>';
 }
 
 /* ---------------- inicio ---------------- */
@@ -462,6 +558,9 @@ function comentarios(zona, clave, temas){
    cualquier accion cambia el perfil y la pagina se rearma sola */
 function sumar(temas, cuanto, mensaje){
   temas.forEach(t => u.pesos[t] = (u.pesos[t] || 0) + cuanto);
+  u.hist = u.hist || [];
+  u.hist.unshift({ t:temas[0], txt:mensaje.replace(/\.$/, ''), n:cuanto });
+  u.hist = u.hist.slice(0,8);
   salvar();
   const abierto = videoActual;
   pintar(mensaje);
