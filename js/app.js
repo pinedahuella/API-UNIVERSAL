@@ -164,6 +164,7 @@ function vestir(t){
     raiz.setProperty('--linea', '#e6e8f0');
     raiz.setProperty('--franja', 'linear-gradient(90deg,#5b6cff,#8b5cf6)');
     document.body.style.backgroundImage = 'none';
+    document.body.style.backgroundColor = '#f6f7fb';
     return;
   }
   raiz.setProperty('--acento', t.color);
@@ -172,6 +173,7 @@ function vestir(t){
   raiz.setProperty('--linea', mezclarColor(t.color, .80));
   raiz.setProperty('--franja', `linear-gradient(90deg,${t.color},${t.c2})`);
   document.body.style.backgroundImage = patron(t);
+  document.body.style.backgroundColor = mezclarColor(t.color, .955);
 }
 
 /* ---------------- acceso ---------------- */
