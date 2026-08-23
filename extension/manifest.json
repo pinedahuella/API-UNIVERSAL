@@ -3,7 +3,11 @@
   "name": "API UNIVERSAL",
   "version": "1.0",
   "description": "Viste cualquier pagina que ya existe con el diseno que arma API UNIVERSAL.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
   "host_permissions": [
     "https://www.instagram.com/*",
     "http://localhost:4321/*"
@@ -14,9 +18,16 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.instagram.com/*"],
-      "css": ["vestido.css"],
-      "js": ["contenido.js"],
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "css": [
+        "vestido.css"
+      ],
+      "js": [
+        "iconos.js",
+        "contenido.js"
+      ],
       "run_at": "document_idle"
     }
   ]

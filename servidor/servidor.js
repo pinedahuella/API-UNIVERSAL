@@ -15,7 +15,7 @@ const { execFile } = require('child_process');
 
 const PUERTO = Number(process.env.PUERTO || 4321);
 const RAIZ = path.join(__dirname, '..');
-const TIMEOUT = 90000;
+const TIMEOUT = 150000;
 
 const TIPOS = {
   '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8',
@@ -82,63 +82,42 @@ Nada de texto fuera del JSON.`;
 
 /* ---------- vestir una pagina que ya existe ---------- */
 function promptVestir(r){
-  const est = JSON.stringify(r.estructura || {}).slice(0, 6000);
-  return `Tengo que vestir una pagina web que YA EXISTE, sin tocar su servidor: solo le
-cambio el CSS desde el navegador. La pagina es de: ${r.tema}
+  const est = JSON.stringify(r.estructura || {}).slice(0, 3500);
+  return `Vestir una pagina web que YA EXISTE, solo con CSS desde el navegador.
+La pagina es de: ${r.tema}
 
-Este es el esqueleto de la pagina. Cada zona trae su selector CSS (s), su ancho (w),
-alto (h), posicion (x,y) y cuantas imagenes, enlaces y botones tiene adentro:
-
+Esqueleto de la pagina (selector, ancho w, alto h, posicion x/y, cuantas img/a/btn tiene):
 ${est}
 
 Devolve SOLO este JSON:
-
 {
- "titulo": "nombre corto para la pagina, maximo 4 palabras, que vaya con ${r.tema}",
- "bienvenida": "dos frases que presenten la pagina, en español de Guatemala, tuteando",
- "iconos": [4 objetos {"id":"nombre corto","d":"el atributo d de un path SVG"}],
- "acento": "#hex",
- "acento2": "#hex",
- "fondo": "#hex",
- "oscuro": true o false,
- "fuente_tit": una de: Fredoka, Quicksand, Bebas Neue, Space Grotesk, Playfair Display, Lora,
- "fuente_txt": una de: Fredoka, Quicksand, Space Grotesk, Lora,
- "radio": "un valor css entre 2px y 28px",
- "selectores": {
-   "zonas": [1 o 2 selectores del esqueleto que sean el contenedor principal del contenido],
-   "tarjetas": [1 o 2 selectores que agrupen imagenes, para redondearlas],
-   "titulos": [1 o 2 selectores de encabezados, si los ves]
- }
+ "titulo":"nombre de la pagina, 2 a 4 palabras",
+ "bienvenida":"dos frases presentandola, en español de Guatemala, tuteando",
+ "acento":"#hex", "acento2":"#hex", "fondo":"#hex", "oscuro":true|false,
+ "fuente_tit":"Fredoka|Quicksand|Bebas Neue|Space Grotesk|Playfair Display|Lora|Pixel|Mono",
+ "fuente_txt":"Fredoka|Quicksand|Space Grotesk|Lora|Mono",
+ "radio":"0px a 28px", "mayus":true|false,
+ "iconos":[3 ids de la lista de abajo, o {"id":"nombre","d":"path SVG"} si de verdad no hay ninguno que sirva],
+ "selectores":{"zonas":["1-2 selectores del esqueleto"],"tarjetas":["1-2"],"titulos":["1-2"]}
 }
 
-SOBRE LOS ICONOS
-Son la marca visual del tema, asi que dibujalos vos, sean lo que sean. Si el tema es
-"serpientes en un desierto", devolve una serpiente, un cactus, una duna y un sol. Si es
-"literatura grecolatina", una columna, un pergamino, una pluma y una corona de laurel.
+ICONOS: son la marca visual del tema. ELEGI 3 de esta lista, por su nombre exacto:
+arbol, auto, caballo, cactus, camara, cohete, columna, conejo, control, engranaje, flor, gato, guitarra, hoja, huella, hueso, joystick, libro, llave, luna, maceta, maleta, mariposa, microfono, monitor, montana, nota, nube, ola, pajaro, paleta, pelicula, pelota, pergamino, perro, pez, piano, pincel, planta, pluma, raton, rueda, semilla, sol, taco, tortuga, trofeo
 
-Cada icono tiene que cumplir esto o no sirve:
-- viewBox implicito "0 0 24 24". Todo el dibujo entre x=2..22 e y=2..22.
-- El campo "d" es el atributo d de UN solo <path> relleno. Nada de stroke, circle,
-  rect ni grupos: el navegador solo va a pintar ese path.
-- Silueta solida y compacta, estilo Material Symbols relleno. Tiene que leerse a 16px:
-  nada mas delgado que 1.5 unidades.
-- Comandos M L H V C S Q T A Z, en una sola linea, terminando cada trazo con Z.
-- Si necesitas un hueco, dibujalo en sentido contrario dentro del mismo path.
+Elegi los que mejor evoquen "${r.tema}", aunque no sean literales: para un desierto
+sirven cactus, sol y montana; para poesia griega, columna, pergamino y pluma.
+SOLO si de verdad ninguno de la lista sirve, devolve un objeto {"id","d"} con el path
+dibujado por vos: UN path relleno, viewBox 0 0 24 24, todo entre 2 y 22, silueta solida
+que se lea a 16px, cerrado con Z.
 
-Ejemplos del nivel de detalle que se espera:
-  hoja:  "M12 3C7 5 4 9 4 14a6 6 0 0 0 8 5.7V13h2v6.7A6 6 0 0 0 20 14c0-5-3-9-8-11Z"
-  huella:"M7 10a2.4 2.4 0 1 1 0-4.8 2.4 2.4 0 0 1 0 4.8Zm10 0a2.4 2.4 0 1 1 0-4.8 2.4 2.4 0 0 1 0 4.8ZM4.6 15.4a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Zm14.8 0a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4ZM12 21c-3 0-5-1.6-5-3.8C7 14.4 9.2 11 12 11s5 3.4 5 6.2C17 19.4 15 21 12 21Z"
+COLOR: si oscuro es true, fondo oscuro y acento claro y brillante; si es false, fondo
+claro pero nunca blanco. El acento tiene que contrastar contra el fondo.
 
-Sobre "duro": ponelo en true cuando el tema pida algo firme y sin curvas
-(arcade, 8 bits, taller mecanico, deportes, videojuegos, tecnologia dura). Con duro
-en true los bordes salen gruesos, la sombra dura, las fotos pixeladas y conviene
-"radio":"0px" con fuente Pixel o Mono y "mayus":true. Con duro en false todo sale
-suave y redondeado.
+FORMA: si el tema pide algo firme y sin curvas (arcade, taller, deportes, 8 bits),
+poné radio "0px" o "2px" con fuente Pixel, Mono o Bebas Neue y mayus true.
 
-Reglas: usa SOLO selectores que aparezcan en el esqueleto, copiados tal cual. No elijas
-zonas gigantes que cubran toda la pantalla (h mayor a 2000) como "zonas". Si "oscuro" es
-true el fondo va oscuro y el acento claro; si es false el fondo va claro pero nunca blanco.
-Los colores tienen que ir con ${r.tema}. Nada de texto fuera del JSON.`;
+SELECTORES: copiá solo selectores que aparezcan en el esqueleto, tal cual. Nada de
+zonas que cubran toda la pantalla (h mayor a 2000). Nada de texto fuera del JSON.`;
 }
 
 function pedirAClaude(prompt){

@@ -103,7 +103,7 @@ html[data-au] .au-enlace.au-enlace *{
 html[data-au] .au-enlace.au-enlace:hover{
   color:var(--au-acento) !important; text-decoration:underline !important;
 }
-html[data-au] a.au-btn, html[data-au] a.au-btn *{color:var(--au-fondo) !important}
+html[data-au] a.au-btn, html[data-au] a.au-btn *{color:var(--au-sobre-acento, #fff) !important}
 html[data-au] svg{color:var(--au-acento) !important; fill:var(--au-acento) !important}
 
 /* ================= BOTONES DE ACCION =================
@@ -111,13 +111,13 @@ html[data-au] svg{color:var(--au-acento) !important; fill:var(--au-acento) !impo
    aunque el sitio las marque como role="button": en Instagram cada
    conversacion es un div[role=button] de 400px de ancho. */
 html[data-au] .au-btn.au-btn{
-  color:var(--au-fondo) !important;
+  color:var(--au-sobre-acento, #fff) !important;
   background-color:var(--au-acento) !important;
   border:var(--au-borde) solid var(--au-tinta) !important;
   box-shadow:var(--au-sombra) !important;
   padding:5px 10px !important;
   font-family:var(--au-tit) !important;
-  font-size:10px !important;
+  font-size:11px !important;
   line-height:1.6 !important;
   white-space:nowrap !important;
   flex:none !important;
@@ -126,9 +126,9 @@ html[data-au] .au-btn.au-btn{
   transition:none !important;
 }
 html[data-au] .au-btn.au-btn *{
-  color:var(--au-fondo) !important;
+  color:var(--au-sobre-acento, #fff) !important;
   font-family:var(--au-tit) !important;
-  font-size:10px !important;
+  font-size:11px !important;
   font-weight:400 !important;
   white-space:nowrap !important;
 }
@@ -295,7 +295,7 @@ html[data-au] /* ================= LA BARRA =================
 #au-barra{
   position:fixed; top:0; left:0; right:0; z-index:2147483000;
   background:var(--au-acento) !important;
-  color:#fff;
+  color:var(--au-sobre-acento, #fff);
   font-family:var(--au-txt);
   border-bottom:var(--au-borde) solid rgba(0,0,0,.18);
   box-shadow:0 2px 16px rgba(0,0,0,.22);
@@ -353,8 +353,8 @@ html[data-au] /* ================= LA BARRA =================
 #au-barra .au-motivos{display:flex; gap:7px; opacity:.85}
 #au-barra .au-motivos svg{display:block}
 #au-barra .au-x{
-  border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.14);
-  color:#fff; border-radius:999px; padding:5px 14px;
+  border:1px solid currentColor; background:transparent;
+  color:inherit; border-radius:999px; padding:5px 14px;
   font-family:var(--au-txt); font-size:12px; font-weight:600; cursor:pointer;
   white-space:nowrap; transition:background .15s;
 }

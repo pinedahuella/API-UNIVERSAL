@@ -184,22 +184,65 @@ function mosaico(){
    que igual se ven intencionales. */
 const D_VALIDO = /^[MmLlHhVvCcSsQqTtAaZz0-9eE ,.\-+]+$/;
 
-/* marcas neutras: si la conexion no manda iconos usables, esto no parece un error */
-const RESPALDO = [
-  'M12 2 22 12 12 22 2 12Z',
-  'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z',
-  'M3 3h18v18H3Zm4 4v10h10V7Z',
-  'M12 2 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9Z'
-];
+/* marcas neutras: si no llega nada usable, esto no parece un error */
+const RESPALDO = ['rombo', 'anillo', 'marco', 'estrella'];
+const NEUTROS = {
+  rombo:    'M12 2 22 12 12 22 2 12Z',
+  anillo:   'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z',
+  marco:    'M3 3h18v18H3Zm4 4v10h10V7Z',
+  estrella: 'M12 2 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9Z'
+};
 
+/* Un path dibujado al vuelo puede salirse del lienzo o quedar en un hilo.
+   La caja se MIDE en el navegador con getBBox: contar los numeros del texto no
+   sirve, porque en los comandos relativos (c, l, a en minuscula) los negativos
+   son desplazamientos, no posiciones, y un path perfectamente bueno se
+   rechazaba por tener un -11. */
+let _medidor = null;
+function pathUsable(d){
+  const p = String(d || '').trim().replace(/\s+/g, ' ');
+  if(p.length < 20 || p.length > 4000) return null;
+  if(!/^[Mm]/.test(p) || !D_VALIDO.test(p)) return null;
+  try {
+    if(!_medidor){
+      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      svg.setAttribute('viewBox','0 0 24 24');
+      svg.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none';
+      svg.id = 'au-medidor';
+      _medidor = document.createElementNS('http://www.w3.org/2000/svg','path');
+      svg.appendChild(_medidor);
+      document.documentElement.appendChild(svg);
+    }
+    _medidor.setAttribute('d', p);
+    const b = _medidor.getBBox();
+    if(b.x < -0.5 || b.y < -0.5) return null;
+    if(b.x + b.width > 24.5 || b.y + b.height > 24.5) return null;
+    if(b.width < 4 || b.height < 4) return null;   // un hilo no se ve a 16px
+    return p;
+  } catch(e){ return null; }
+}
+
+/* La conexion elige por nombre de la biblioteca; solo dibuja cuando de verdad
+   no hay nada que sirva. Se probo pedirle que dibujara siempre y salia pobre. */
 function iconosDe(d){
+  const lib = (typeof ICONOS !== 'undefined') ? ICONOS : {};
   const salida = [];
-  (Array.isArray(d.iconos) ? d.iconos : []).forEach(ic => {
-    const p = String(ic && ic.d || '').trim().replace(/\s+/g, ' ');
-    if(p.length > 20 && p.length < 4000 && /^[Mm]/.test(p) && D_VALIDO.test(p))
-      salida.push(p);
+  (Array.isArray(d.iconos) ? d.iconos : []).forEach(x => {
+    if(typeof x === 'string'){
+      if(lib[x]) salida.push(lib[x]);
+      return;
+    }
+    if(x && typeof x === 'object'){
+      if(x.id && lib[x.id]){ salida.push(lib[x.id]); return; }
+      const p = pathUsable(x.d);
+      if(p) salida.push(p);
+    }
   });
-  while(salida.length < 4) salida.push(RESPALDO[salida.length % RESPALDO.length]);
+  let i = 0;
+  while(salida.length < 4){
+    salida.push(NEUTROS[RESPALDO[i % RESPALDO.length]]);
+    i++;
+  }
   return salida.slice(0, 4);
 }
 
@@ -257,6 +300,7 @@ function vestir(d){
   p.setProperty('--au-pixel',  duro ? 'pixelated' : 'auto');
   p.setProperty('--au-avatar-r', duro ? (d.radio || '0px') : '50%');
   p.setProperty('--au-acento-suave', oscuro ? aclarar(d.fondo, 30) : mezclar(d.acento, .86));
+  p.setProperty('--au-sobre-acento', sobre(d.acento));
 
   AU.iconos = iconosDe(d);
   fondo(d);
@@ -379,6 +423,23 @@ function quitar(){
 
 /* ============ 5. COLORES ============ */
 function nums(h){ const n = parseInt(String(h).replace('#',''),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+
+/* Que color de texto va SOBRE un fondo dado. Los colores los elige un modelo,
+   asi que no se puede clavar blanco: crema sobre terracota daba 2.9:1 y a 10px
+   no se leia. Se calcula el contraste y gana el que mas de. */
+function luminancia(h){
+  const [r,g,b] = nums(h).map(v => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+}
+function sobre(fondoHex){
+  const L = luminancia(fondoHex);
+  const conBlanco = (1.05) / (L + 0.05);
+  const conNegro  = (L + 0.05) / 0.05;
+  return conBlanco >= conNegro ? '#ffffff' : '#111111';
+}
 function conAlfa(h,a){ const [r,g,b] = nums(h); return `rgba(${r},${g},${b},${a})`; }
 function mezclar(h,blanco){ const [r,g,b] = nums(h); const m = v => Math.round(v+(255-v)*blanco); return `rgb(${m(r)},${m(g)},${m(b)})`; }
 function aclarar(h,cuanto){ const [r,g,b] = nums(h); const s = v => Math.min(255, v+cuanto); return `rgb(${s(r)},${s(g)},${s(b)})`; }
