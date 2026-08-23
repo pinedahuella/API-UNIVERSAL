@@ -318,3 +318,104 @@ input:focus{outline:0;border-color:var(--acento);box-shadow:0 0 0 3px var(--acen
   .post{padding:14px}
   .accion{padding:8px 13px;font-size:.82rem}
 }
+
+/* ================= HOLA MUNDO Y LA FOCA ================= */
+.hola{
+  min-height:100vh;display:grid;place-items:center;padding:28px 20px;
+  background:#fbfbfd;transition:opacity .55s ease,transform .55s ease;
+}
+.hola.fuera{opacity:0;transform:scale(.97);pointer-events:none}
+.hola-caja{width:100%;max-width:520px;text-align:center}
+.hola-cero{
+  font-family:"Courier New",monospace;font-size:.82rem;color:#b9bdc9;
+  margin:0 0 26px;letter-spacing:.08em;
+}
+.dice{min-height:78px;margin-bottom:6px}
+.dice p{
+  margin:0 0 6px;font-size:1.22rem;line-height:1.45;color:#12141c;
+  font-family:'Quicksand','Segoe UI',sans-serif;font-weight:600;
+}
+.dice p:last-child{color:#3d4353;font-weight:500}
+
+.mascota{width:190px;height:190px;margin:2px auto 14px}
+.fc{width:100%;height:100%;overflow:visible}
+.fc-sombra{fill:#0e1016;opacity:.07}
+.fc-piel{fill:#9fb6cc}
+.fc-panza{fill:#eef3f8}
+.fc-cachete{fill:#f7b3b8;opacity:.55}
+.fc-ojo{fill:#1d2430}
+.fc-brillo{fill:#fff}
+.fc-nariz{fill:#5b6b7d;stroke:none}
+.fc-linea,.fc-boca{fill:none;stroke:#5b6b7d;stroke-width:2.4;stroke-linecap:round}
+.fc-bigotes path{stroke:#c3cfdb;stroke-width:2;stroke-linecap:round;fill:none}
+
+.fc-todo{transform-origin:100px 190px;animation:respira 3.6s ease-in-out infinite}
+@keyframes respira{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.012)}}
+.fc-ojos{animation:parpadeo 4.4s infinite;transform-origin:100px 74px}
+@keyframes parpadeo{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+.fc-aleta-i{transform-origin:60px 140px}
+.fc-aleta-d{transform-origin:140px 140px}
+
+.mascota.hablando .fc-aleta-i{animation:saluda 0.7s ease-in-out infinite}
+.mascota.hablando .fc-aleta-d{animation:saluda 0.7s ease-in-out infinite reverse}
+@keyframes saluda{0%,100%{transform:rotate(0)}50%{transform:rotate(-16deg)}}
+.mascota.hablando .fc-boca{animation:habla .34s ease-in-out infinite alternate}
+@keyframes habla{from{d:path("M92 101 Q100 107 108 101")}to{d:path("M92 100 Q100 111 108 100")}}
+
+.mascota.pensando .fc-todo{animation:piensa 1s ease-in-out infinite}
+@keyframes piensa{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.mascota.pensando .fc-ojos{animation:mira 1.4s ease-in-out infinite}
+@keyframes mira{0%,100%{transform:translateX(-4px)}50%{transform:translateX(4px)}}
+
+.mascota.listo .fc-todo{animation:brinca .55s ease-out 2}
+@keyframes brinca{0%,100%{transform:translateY(0)}35%{transform:translateY(-22px) scale(1.04)}}
+.mascota.listo .fc-cachete{opacity:.85}
+
+.responde{opacity:0;transform:translateY(8px);transition:.3s ease;pointer-events:none}
+.responde.visible{opacity:1;transform:none;pointer-events:auto}
+.campo{display:flex;gap:8px;justify-content:center}
+.campo.doble{flex-wrap:wrap}
+.campo input{
+  flex:1;min-width:0;margin:0;padding:13px 16px;border:1.5px solid #e2e5ee;border-radius:14px;
+  background:#fff;font-size:1rem;text-align:center;
+}
+.campo.doble input{flex:1 1 40%}
+.campo input:focus{outline:0;border-color:#5b6cff;box-shadow:0 0 0 4px rgba(91,108,255,.13)}
+.ok{
+  width:48px;flex:none;border:0;border-radius:14px;background:#12141c;color:#fff;
+  font-size:1.1rem;cursor:pointer;transition:transform .12s,background .15s;
+}
+.ok:hover{background:#5b6cff}
+.ok:active{transform:scale(.94)}
+.ops{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+.op{
+  padding:11px 19px;border:1.5px solid #e2e5ee;border-radius:99px;background:#fff;
+  cursor:pointer;font-size:.94rem;font-weight:600;color:#3d4353;transition:.15s;
+  font-family:'Quicksand','Segoe UI',sans-serif;
+}
+.op:hover{border-color:#5b6cff;color:#5b6cff;transform:translateY(-2px)}
+.aviso-chico{font-size:.82rem;color:#e0454b;margin:10px 0 0;min-height:1em}
+
+.progreso{height:3px;background:#eceef4;border-radius:99px;margin:30px auto 14px;max-width:220px;overflow:hidden}
+.progreso-in{height:100%;width:0;background:#5b6cff;border-radius:99px;transition:width .4s ease}
+.progreso.trabajando .progreso-in{width:100% !important;animation:cargando 1.1s ease-in-out infinite}
+@keyframes cargando{0%,100%{opacity:1}50%{opacity:.35}}
+.hola-link{
+  border:0;background:transparent;color:#9aa0af;font-size:.84rem;cursor:pointer;
+  text-decoration:underline;padding:6px;
+}
+.hola-link:hover{color:#5b6cff}
+
+@media(max-width:520px){
+  .dice p{font-size:1.06rem}
+  .mascota{width:150px;height:150px}
+  .campo.doble input{flex:1 1 100%}
+  .ok{width:100%}
+}
+
+.ico{
+  font-size:1.9rem;height:38px;line-height:38px;margin-bottom:4px;
+  opacity:0;transform:translateY(6px) scale(.8);
+}
+.ico.entra{animation:ico-entra .45s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes ico-entra{to{opacity:1;transform:none}}

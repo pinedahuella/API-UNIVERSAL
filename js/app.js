@@ -192,9 +192,16 @@ const NEUTRO = {
   som:'0 2px 4px rgba(14,16,22,.04),0 12px 28px rgba(14,16,22,.07)'
 };
 
-function vestir(t){
+function vestir(t, d){
   const raiz = document.documentElement.style;
-  const e = t ? t.est : NEUTRO;
+  let e = t ? t.est : NEUTRO;
+  if(t && d){
+    e = Object.assign({}, e, {
+      tit:d.tit, txt:d.txt, r:d.radio, rs:d.radio,
+      tt:d.mayus ? 'uppercase' : 'none',
+      fondo:d.fondo, oscuro:d.oscuro
+    });
+  }
   raiz.setProperty('--fuente-tit', e.tit);
   raiz.setProperty('--fuente-txt', e.txt);
   raiz.setProperty('--r', e.r);
@@ -220,8 +227,10 @@ function vestir(t){
     return;
   }
 
-  raiz.setProperty('--acento', t.color);
-  raiz.setProperty('--franja', `linear-gradient(90deg,${t.color},${t.c2})`);
+  const c1 = (d && d.acento) || t.color;
+  const c2 = (d && d.acento2) || t.c2;
+  raiz.setProperty('--acento', c1);
+  raiz.setProperty('--franja', `linear-gradient(90deg,${c1},${c2})`);
   raiz.setProperty('--fondo', e.fondo);
 
   if(e.oscuro){
@@ -236,15 +245,16 @@ function vestir(t){
     raiz.setProperty('--tinta', '#0e1016');
     raiz.setProperty('--tinta-2', '#3d4353');
     raiz.setProperty('--tenue', '#767d8f');
-    raiz.setProperty('--linea', mezclarColor(t.color, .74));
-    raiz.setProperty('--acento-suave', mezclarColor(t.color, .90));
+    raiz.setProperty('--linea', mezclarColor(c1, .74));
+    raiz.setProperty('--acento-suave', mezclarColor(c1, .90));
   }
 
   const brillo = e.oscuro ? .30 : .55;
   const lavado =
-    `radial-gradient(900px 620px at 12% -8%, ${conAlfa(t.color, brillo)}, transparent 62%),` +
-    `radial-gradient(760px 560px at 102% 104%, ${conAlfa(t.c2, brillo)}, transparent 60%)`;
-  document.body.style.backgroundImage = patron(t) + ',' + lavado;
+    `radial-gradient(900px 620px at 12% -8%, ${conAlfa(c1, brillo)}, transparent 62%),` +
+    `radial-gradient(760px 560px at 102% 104%, ${conAlfa(c2, brillo)}, transparent 60%)`;
+  const motivos = (d && d.motivos) ? Object.assign({}, t, {motivos:d.motivos}) : t;
+  document.body.style.backgroundImage = patron(motivos) + ',' + lavado;
   document.body.style.backgroundRepeat = 'repeat,no-repeat,no-repeat';
   document.body.style.backgroundColor = e.fondo;
 }
@@ -254,39 +264,7 @@ function conAlfa(hex, a){
   return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
 }
 
-/* ---------------- acceso ---------------- */
-$$('.tab').forEach(b => b.onclick = () => irPanel(b.dataset.panel));
-$$('[data-ir]').forEach(a => a.onclick = e => { e.preventDefault(); irPanel(a.dataset.ir); });
-function irPanel(id){
-  $$('.tab').forEach(t => t.classList.toggle('activo', t.dataset.panel === id));
-  $$('.panel').forEach(p => p.classList.toggle('activo', p.id === id));
-}
-
-$('#p-registro').onsubmit = e => {
-  e.preventDefault();
-  const nombre = $('#reg-nombre').value.trim();
-  const user = $('#reg-user').value.trim().toLowerCase();
-  const pass = $('#reg-pass').value;
-  const err = $('#reg-error');
-  if(!nombre || !user || !pass){ err.textContent = 'Llená los tres campos.'; return; }
-  if(pass.length < 4){ err.textContent = 'La contraseña necesita al menos 4 caracteres.'; return; }
-  if(base()[user]){ err.textContent = 'Ese usuario ya existe.'; return; }
-  err.textContent = '';
-  const pesos = {};
-  TEMAS.forEach(t => pesos[t.id] = 0);
-  entrar({ user, nombre, pass, pesos, vistos:[], marcados:[], coment:{}, hist:[] }, true);
-};
-
-$('#p-login').onsubmit = e => {
-  e.preventDefault();
-  const user = $('#login-user').value.trim().toLowerCase();
-  const reg = base()[user];
-  if(!reg || reg.pass !== $('#login-pass').value){
-    $('#login-error').textContent = 'Usuario o contraseña incorrectos.'; return;
-  }
-  $('#login-error').textContent = '';
-  entrar(reg, false);
-};
+/* el registro y el ingreso los hace la foca, en mascota.js */
 
 $('#salir').onclick = () => {
   u = null; videoActual = null;
@@ -294,10 +272,8 @@ $('#salir').onclick = () => {
   vestir(null);
   document.body.dataset.tema = '';
   $('#app').hidden = true;
-  $('#acceso').hidden = false;
-  $('#p-login').reset(); $('#p-registro').reset();
   $('#menu').classList.remove('abierto');
-  irPanel('p-login');
+  location.reload();
 };
 
 const reiniciar = () => {
@@ -313,10 +289,10 @@ $('#reiniciar').onclick = reiniciar;
 $('#reiniciar2').onclick = reiniciar;
 
 /* ---------------- entrar ---------------- */
-function entrar(usuario, nuevo){
+function entrar(usuario, nuevo, saludo){
   u = usuario;
   if(nuevo) salvar();
-  $('#acceso').hidden = true;
+  $('#hola').hidden = true;
   $('#app').hidden = false;
   const ini = iniciales(u.nombre);
   $('#avatar').textContent = ini;
@@ -325,13 +301,14 @@ function entrar(usuario, nuevo){
   $('#perfil-nombre').textContent = u.nombre;
   $('#perfil-user').textContent = '@' + u.user;
   vista('v-inicio');
-  pintar(nuevo ? '¡Bienvenido!' : 'Bienvenido de vuelta.');
+  pintar(saludo || (nuevo ? '¡Bienvenido!' : 'Bienvenido de vuelta.'));
 }
 
 /* ---------------- pintar todo ---------------- */
 function pintar(mensaje){
   const r = consultar(u);
-  vestir(r.conoce ? T(r.principal) : null);
+  const aMedida = (u.diseno && r.conoce && r.principal === u.diseno.intereses[0]) ? u.diseno : null;
+  vestir(r.conoce ? T(r.principal) : null, aMedida);
   document.body.dataset.tema = r.conoce ? r.principal : '';
   banner(r, mensaje);
   barras(r);
@@ -349,6 +326,11 @@ function banner(r, mensaje){
     return;
   }
   const t = T(r.principal);
+  if(mensaje && mensaje.length > 90){
+    b.innerHTML = `<span class="banner-deco">${[t.emoji, ...t.motivos].join('')}</span>` +
+      `<span class="banner-txt">${mensaje}</span>`;
+    return;
+  }
   const mezcla = r.mezclas.length
     ? ` También te juntamos cosas de <b>${r.mezclas[0].t.map(x => T(x).nombre).join(' y ')}</b>, porque venís viendo las dos.`
     : '';
@@ -370,8 +352,10 @@ function barras(r){
   } else {
     const t = T(r.principal);
     cab.textContent = t.emoji;
-    tit.textContent = 'Estilo ' + t.nombre;
-    aire.textContent = t.est.aire;
+    const aMedida = (u.diseno && r.principal === u.diseno.intereses[0]) ? u.diseno : null;
+    cab.textContent = aMedida ? (aMedida.motivos[0] || t.emoji) : t.emoji;
+    tit.textContent = aMedida ? aMedida.titulo : ('Estilo ' + t.nombre);
+    aire.textContent = aMedida ? aMedida.aire : t.est.aire;
     c.innerHTML = r.reparto.map(x => {
       const y = T(x.t);
       return `<div class="barra-item">

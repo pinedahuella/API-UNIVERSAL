@@ -1,11 +1,24 @@
 # API-UNIVERSAL
 
-Demostracion de API UNIVERSAL. Pagina estatica: HTML, CSS y JavaScript.
+Demostracion de API UNIVERSAL.
 
-Al registrarse no se le pregunta nada a la persona. La pagina aprende sola de los
-videos que abre, de los que marca y de lo que comenta, y con eso se vuelve a armar
-completa: color, fondo, orden del contenido y el grupo donde platica.
+La pagina arranca vacia, con una foca que hace cinco preguntas. Con las respuestas
+arma la pagina completa: tema, colores, tipografia, formas, videos y publicaciones.
+Despues sigue cambiando con lo que la persona abre, marca y comenta.
 
-Funciona en telefono y en computadora. No hay servidor, todo corre en el navegador.
+## Como correrlo con Claude
 
-Abrir: https://pinedahuella.github.io/API-UNIVERSAL/
+    node servidor/servidor.js
+
+Y abrir http://localhost:4321
+
+El servidor le pide el diseno a Claude CLI con el modelo Haiku. Si Claude no esta
+disponible o tarda demasiado, la pagina se arma igual con el generador local: la
+generacion es un extra, nunca un requisito.
+
+## Sin servidor
+
+Abriendo el index.html directamente (o en GitHub Pages) funciona todo menos el diseno
+hecho por Claude, que lo reemplaza el generador local.
+
+https://pinedahuella.github.io/API-UNIVERSAL/

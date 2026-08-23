@@ -8,50 +8,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@400;600&family=Lora:wght@400;600&family=Playfair+Display:wght@600;800&family=Quicksand:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=6">
+<link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
 
-<!-- ================= ACCESO ================= -->
-<section id="acceso" class="acceso">
-  <div class="acceso-arte">
-    <div class="acceso-arte-in">
-      <div class="marca grande">API<span>UNIVERSAL</span></div>
-      <h2>Tu página se arma sola.</h2>
-      <p>Entrá, mirá lo que te llame la atención y mirá cómo todo lo demás
-         empieza a acomodarse a vos.</p>
-      <div class="acceso-pastillas">
-        <span>🐶</span><span>🐱</span><span>⚽</span><span>🎧</span>
-        <span>💻</span><span>🍜</span><span>✈️</span><span>🎮</span>
-      </div>
-      <p class="mini-nota">Demostración de la propuesta. No es el producto terminado.</p>
-    </div>
-  </div>
+<!-- ================= HOLA MUNDO ================= -->
+<section id="hola" class="hola">
+  <div class="hola-caja">
+    <p class="hola-cero">hola mundo</p>
 
-  <div class="acceso-form">
-    <div class="card">
-      <div class="tabs">
-        <button class="tab activo" data-panel="p-login">Entrar</button>
-        <button class="tab" data-panel="p-registro">Crear cuenta</button>
-      </div>
+    <div class="ico" id="ico"></div>
+    <div class="dice" id="dice"></div>
 
-      <form id="p-login" class="panel activo" autocomplete="off">
-        <label>Usuario<input type="text" id="login-user" placeholder="tu usuario" required></label>
-        <label>Contraseña<input type="password" id="login-pass" placeholder="tu contraseña" required></label>
-        <p class="error" id="login-error"></p>
-        <button type="submit" class="btn">Entrar</button>
-        <p class="pie">¿Primera vez? <a href="#" data-ir="p-registro">Creá tu cuenta</a></p>
-      </form>
+    <div class="mascota" id="mascota"></div>
 
-      <form id="p-registro" class="panel" autocomplete="off">
-        <label>Nombre<input type="text" id="reg-nombre" placeholder="cómo te llamás" required></label>
-        <label>Usuario<input type="text" id="reg-user" placeholder="elegí un usuario" required></label>
-        <label>Contraseña<input type="password" id="reg-pass" placeholder="mínimo 4 caracteres" required></label>
-        <p class="error" id="reg-error"></p>
-        <button type="submit" class="btn">Crear cuenta</button>
-        <p class="pie tenue chico">No te preguntamos qué te gusta. Eso lo va a ir aprendiendo la página.</p>
-      </form>
-    </div>
+    <div class="responde" id="responde"></div>
+
+    <div class="progreso" id="progreso"><div class="progreso-in" id="progreso-in"></div></div>
   </div>
 </section>
 
@@ -159,6 +132,7 @@
   </div>
 </section>
 
-<script src="js/app.js?v=6"></script>
+<script src="js/app.js?v=10"></script>
+<script src="js/mascota.js?v=10"></script>
 </body>
 </html>
