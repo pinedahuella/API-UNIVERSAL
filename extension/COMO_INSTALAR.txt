@@ -7,7 +7,7 @@ API UNIVERSAL - extension de Chrome
 3. Arriba a la derecha, activar "Modo de desarrollador".
 
 4. Boton "Cargar descomprimida" y senalar esta carpeta:
-   C:\Proyectos\API-UNIVERSAL\extension
+   C:\Users\memit\OneDrive - Universidad del Istmo\EMPRENDIMIENTO\API-UNIVERSAL\extension
 
 5. Entrar a Instagram, hacer clic en el icono de la extension,
    escribir de que es la pagina (por ejemplo: un vivero de plantas)
