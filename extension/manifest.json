@@ -14,7 +14,13 @@
   ],
   "action": {
     "default_title": "API UNIVERSAL",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "iconos/icono16.png",
+      "32": "iconos/icono32.png",
+      "48": "iconos/icono48.png",
+      "128": "iconos/icono128.png"
+    }
   },
   "content_scripts": [
     {
@@ -30,5 +36,11 @@
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "icons": {
+    "16": "iconos/icono16.png",
+    "32": "iconos/icono32.png",
+    "48": "iconos/icono48.png",
+    "128": "iconos/icono128.png"
+  }
 }

@@ -23,6 +23,12 @@ Cuando el diseno esta listo salta el confeti y la pagina queda vestida.
 
 Para dejar la pagina como estaba: boton "Quitar" en la barra de arriba.
 
+EL ICONO
+
+Se genera con:  python servidor/hacer_iconos.py
+Sale a extension/iconos/ en 16, 32, 48 y 128 px, mas _muestra.png para verlos
+juntos. Si cambias los colores o la marca, corre ese script otra vez.
+
 DESPUES DE CAMBIAR LOS ARCHIVOS
 
 Chrome no recarga sola la extension. Hay que ir a chrome://extensions y darle
