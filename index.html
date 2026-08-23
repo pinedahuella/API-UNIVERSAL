@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API UNIVERSAL</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ============ ACCESO ============ -->
+<section id="acceso" class="acceso">
+  <div class="acceso-marca">
+    <h1>API <span>UNIVERSAL</span></h1>
+    <p>Sistema capaz de responder cualquier información</p>
+    <p class="acceso-nota">Demostración. La página se arma distinta para cada persona
+      a partir de los datos que registra.</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab activo" data-panel="p-login">Iniciar sesión</button>
+      <button class="tab" data-panel="p-registro">Crear cuenta</button>
+    </div>
+
+    <!-- login -->
+    <form id="p-login" class="panel activo" autocomplete="off">
+      <label>Usuario
+        <input type="text" id="login-user" placeholder="tu usuario" required>
+      </label>
+      <label>Contraseña
+        <input type="password" id="login-pass" placeholder="tu contraseña" required>
+      </label>
+      <p class="error" id="login-error"></p>
+      <button type="submit" class="btn">Entrar</button>
+      <p class="pie">¿No tenés cuenta? <a href="#" data-ir="p-registro">Creá una</a></p>
+    </form>
+
+    <!-- registro -->
+    <form id="p-registro" class="panel" autocomplete="off">
+      <div class="paso" data-paso="1">
+        <label>Nombre
+          <input type="text" id="reg-nombre" placeholder="cómo te llamás" required>
+        </label>
+        <label>Usuario
+          <input type="text" id="reg-user" placeholder="elegí un usuario" required>
+        </label>
+        <label>Contraseña
+          <input type="password" id="reg-pass" placeholder="mínimo 4 caracteres" required>
+        </label>
+        <p class="error" id="reg-error"></p>
+        <button type="button" class="btn" id="ir-paso2">Siguiente</button>
+      </div>
+
+      <div class="paso" data-paso="2" hidden>
+        <p class="pregunta">¿Qué te interesa? <small>Elegí de 1 a 3</small></p>
+        <div class="chips" id="chips-interes"></div>
+
+        <p class="pregunta">¿Cómo preferís ver la página?</p>
+        <div class="chips" id="chips-tema"></div>
+
+        <p class="pregunta">¿Qué querés hacer aquí?</p>
+        <div class="chips" id="chips-uso"></div>
+
+        <p class="error" id="reg-error2"></p>
+        <div class="fila">
+          <button type="button" class="btn ghost" id="volver-paso1">Atrás</button>
+          <button type="submit" class="btn">Crear mi cuenta</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section id="app" hidden>
+  <header class="top">
+    <div class="top-marca">API <span>UNIVERSAL</span></div>
+    <nav class="top-nav">
+      <button class="nav-btn activo" data-vista="v-inicio">Inicio</button>
+      <button class="nav-btn" data-vista="v-mensajes">Mensajes</button>
+      <button class="nav-btn" data-vista="v-video">Video</button>
+      <button class="nav-btn" data-vista="v-perfil">Mi perfil</button>
+    </nav>
+    <div class="top-user">
+      <span class="avatar" id="avatar"></span>
+      <span id="top-nombre"></span>
+      <button class="btn mini ghost" id="salir">Salir</button>
+    </div>
+  </header>
+
+  <div class="cuerpo">
+    <main class="centro">
+      <div class="aviso" id="aviso"></div>
+
+      <!-- inicio -->
+      <div id="v-inicio" class="vista activo">
+        <div class="publicar">
+          <span class="avatar" id="avatar2"></span>
+          <input type="text" id="post-texto" placeholder="Escribí algo...">
+          <button class="btn mini" id="post-enviar">Publicar</button>
+        </div>
+        <div id="feed"></div>
+      </div>
+
+      <!-- mensajes -->
+      <div id="v-mensajes" class="vista">
+        <div class="chat">
+          <div class="chat-head" id="chat-head"></div>
+          <div class="chat-cuerpo" id="chat-cuerpo"></div>
+          <div class="chat-pie">
+            <input type="text" id="chat-texto" placeholder="Escribí un mensaje...">
+            <button class="btn mini" id="chat-enviar">Enviar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- video -->
+      <div id="v-video" class="vista">
+        <div class="tarjeta">
+          <div class="reproductor" id="reproductor">
+            <div class="escena" id="escena"></div>
+            <button class="play" id="play">&#9654;</button>
+            <div class="barra"><div class="barra-in" id="barra-in"></div></div>
+          </div>
+          <h3 id="video-titulo"></h3>
+          <p class="tenue" id="video-desc"></p>
+        </div>
+        <div id="video-lista" class="lista-videos"></div>
+      </div>
+
+      <!-- perfil -->
+      <div id="v-perfil" class="vista">
+        <div class="tarjeta perfil">
+          <span class="avatar grande" id="avatar3"></span>
+          <h3 id="perfil-nombre"></h3>
+          <p class="tenue" id="perfil-user"></p>
+          <p class="pregunta">Tus intereses</p>
+          <div class="chips" id="perfil-chips"></div>
+          <p class="tenue">Si cambiás esto, la página se vuelve a armar al instante.</p>
+          <button class="btn mini" id="perfil-guardar">Guardar cambios</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="lado">
+      <div class="tarjeta api">
+        <div class="api-head">
+          <strong>Respuesta de la API</strong>
+          <span class="punto"></span>
+        </div>
+        <p class="tenue chico">Esto es lo que la conexión le devolvió a tu sistema
+          para armar la pantalla que estás viendo.</p>
+        <pre id="api-json"></pre>
+        <p class="tenue chico" id="api-tiempo"></p>
+      </div>
+
+      <div class="tarjeta">
+        <strong>Para vos</strong>
+        <ul class="temas" id="temas"></ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script src="js/app.js"></script>
+</body>
+</html>
