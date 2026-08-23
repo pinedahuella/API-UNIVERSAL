@@ -1,179 +1,277 @@
-/* Estilos base de la extension. Van en el manifest, asi no los bloquea el CSP
-   de la pagina. Los colores concretos los pone contenido.js como variables. */
+/* API UNIVERSAL - estilos que se le ponen a una pagina que ya existe.
+   Van declarados en el manifest, asi no los bloquea el CSP del sitio.
+   Los valores concretos los pone contenido.js como variables.
+
+   REGLA DE ORO: todo selector que toca el sitio excluye [id^="au-"],
+   porque si no, terminamos borrando nuestros propios elementos. Ya paso
+   tres veces: la barra se quedaba sin fondo, el confeti se ocultaba y
+   la intro perdia su tipografia. */
 
 html[data-au]{
-  --au-acento:#2f8f5b;
-  --au-acento2:#7ad4a1;
-  --au-fondo:#eef7f1;
+  --au-acento:#5b6cff;
+  --au-acento2:#8b5cf6;
+  --au-fondo:#f6f7fb;
   --au-papel:#ffffff;
   --au-tinta:#12171f;
   --au-tinta2:#5b6272;
-  --au-linea:#d6e6dc;
-  --au-radio:18px;
-  --au-tit:Georgia, serif;
-  --au-txt:"Segoe UI", system-ui, sans-serif;
+  --au-linea:#e2e5ee;
+  --au-radio:14px;
+  --au-borde:1px;
+  --au-sombra:0 6px 20px rgba(0,0,0,.10);
+  --au-tit:"Segoe UI",system-ui,sans-serif;
+  --au-txt:"Segoe UI",system-ui,sans-serif;
+  --au-tt:none;
+  --au-ls:normal;
+  --au-pixel:auto;
+  --au-canvas:visible;
+  --au-avatar-r:50%;
 }
 
-/* el fondo de toda la pagina */
+/* ================= BASE ================= */
 html[data-au] body{
   background-color:var(--au-fondo) !important;
   color:var(--au-tinta) !important;
   font-family:var(--au-txt) !important;
+  padding-top:44px !important;
 }
-/* Los contenedores del sitio se vuelven transparentes para que se vea el fondo.
-   Lo nuestro (todo lo que empieza con au-) se queda como esta. */
-html[data-au] main,
-html[data-au] main div,
-html[data-au] main section,
+
+/* los contenedores del sitio se vuelven transparentes para que se vea el fondo */
+html[data-au] main, html[data-au] main div, html[data-au] main section,
+html[data-au] main ul, html[data-au] main li,
 html[data-au] div[role="presentation"],
-html[data-au] nav, html[data-au] nav div,
+html[data-au] nav, html[data-au] nav div, html[data-au] section,
 html[data-au] body > div:not([id^="au-"]),
 html[data-au] body > div > div:not([id^="au-"]),
 html[data-au] div.html-div:not([id^="au-"]){
   background-color:transparent !important;
 }
 
-/* ---- que TODO el texto del sitio se lea sobre el fondo nuevo ---- */
+/* forma y tipografia de TODO lo del sitio, nunca de lo nuestro */
+html[data-au] *:not([id^="au-"]):not([id^="au-"] *){
+  border-radius:var(--au-radio) !important;
+}
+html[data-au] *:not([id^="au-"]):not([id^="au-"] *){
+  font-family:var(--au-txt) !important;
+  letter-spacing:var(--au-ls) !important;
+}
+html[data-au] h1, html[data-au] h2, html[data-au] h3{
+  font-family:var(--au-tit) !important;
+  text-transform:var(--au-tt) !important;
+  font-size:.86em !important;
+  line-height:1.6 !important;
+}
+
+/* ================= TEXTO =================
+   En un tema oscuro, si no se repinta el texto del sitio, media
+   interfaz queda invisible. Se usan dos tonos: principal y secundario. */
 html[data-au] span, html[data-au] div, html[data-au] p,
-html[data-au] h1, html[data-au] h2, html[data-au] h3,
-html[data-au] label, html[data-au] time{
+html[data-au] label, html[data-au] time, html[data-au] h4, html[data-au] h5{
   color:var(--au-tinta) !important;
 }
-html[data-au] time,
-html[data-au] span[style*="color: rgb(115"],
-html[data-au] span[style*="color:rgb(115"]{
+html[data-au] time, html[data-au] footer, html[data-au] footer *{
   color:var(--au-tinta2) !important;
 }
-html[data-au] a{color:var(--au-tinta) !important; text-decoration:none}
-html[data-au] a[role="link"] span{color:var(--au-tinta) !important}
+html[data-au] a:not(.au-fila):not(.au-icono):not(.au-btn){
+  color:var(--au-acento) !important; text-decoration:none;
+}
+html[data-au] a.au-btn, html[data-au] a.au-btn *{color:var(--au-fondo) !important}
+html[data-au] svg{color:var(--au-acento) !important; fill:var(--au-acento) !important}
 
-/* el encabezado de cada publicacion. Instagram no usa <header> aqui: es el primer
-   bloque de enlaces del article, con el usuario y la hora. */
-html[data-au] article > div > div:first-child a[role="link"],
-html[data-au] article > div > div:first-child span{
+/* ================= BOTONES DE ACCION =================
+   Solo los chicos con texto corto. Las filas de una lista NO son botones,
+   aunque el sitio las marque como role="button": en Instagram cada
+   conversacion es un div[role=button] de 400px de ancho. */
+html[data-au] .au-btn.au-btn{
+  color:var(--au-fondo) !important;
+  background-color:var(--au-acento) !important;
+  border:var(--au-borde) solid var(--au-tinta) !important;
+  box-shadow:var(--au-sombra) !important;
+  padding:5px 10px !important;
+  font-family:var(--au-tit) !important;
+  font-size:9px !important;
+  line-height:1.5 !important;
+  white-space:nowrap !important;
+  flex:none !important;
+  min-height:0 !important; height:auto !important;
+  text-transform:var(--au-tt) !important;
+  transition:none !important;
+}
+html[data-au] .au-btn.au-btn *{
+  color:var(--au-fondo) !important;
+  font-family:var(--au-tit) !important;
+  font-size:9px !important;
+  font-weight:400 !important;
+  white-space:nowrap !important;
+}
+html[data-au] .au-btn.au-btn:active{transform:translate(2px,2px) !important;box-shadow:none !important}
+
+/* ================= FILAS DE LISTA ================= */
+html[data-au] .au-fila.au-fila{
+  background-color:transparent !important;
+  border:0 !important; box-shadow:none !important;
+  padding:6px !important;
+}
+html[data-au] .au-fila.au-fila:hover{
+  background-color:var(--au-papel) !important;
+  outline:2px solid var(--au-acento) !important; outline-offset:-2px;
+}
+html[data-au] .au-fila.au-fila *{
+  font-size:inherit !important; color:var(--au-tinta) !important;
+}
+html[data-au] .au-fila.au-fila span{
+  white-space:nowrap !important; text-overflow:ellipsis !important; overflow:hidden !important;
+}
+
+/* ================= ICONOS Y MENU ================= */
+html[data-au] .au-icono.au-icono{
+  background-color:transparent !important; border:0 !important;
+  box-shadow:none !important; padding:0 !important;
+}
+html[data-au] .au-icono.au-icono,
+html[data-au] .au-icono.au-icono *{
   color:var(--au-tinta) !important;
+  font-family:var(--au-txt) !important;
+  font-size:inherit !important;
+  background-color:transparent !important;
 }
-html[data-au] div[role="button"], html[data-au] button{color:var(--au-acento) !important}
-html[data-au] button[type="button"]{background-color:transparent !important}
-html[data-au] div[role="button"] span, html[data-au] button span{
-  color:var(--au-acento) !important; font-weight:700;
+html[data-au] nav .au-icono:hover{background-color:var(--au-papel) !important}
+
+/* ================= IMAGENES ================= */
+html[data-au] img, html[data-au] video{image-rendering:var(--au-pixel)}
+/* el avatar sigue la forma del tema: redondo en los suaves, cuadrado en los
+   duros. Si se deja cuadrado con el anillo redondo del sitio, no casan. */
+html[data-au] .au-avatar.au-avatar{
+  border:2px solid var(--au-acento) !important;
+  border-radius:var(--au-avatar-r) !important;
+  box-shadow:none !important;
 }
+html[data-au] .au-media.au-media{border:var(--au-borde) solid var(--au-acento2) !important}
+/* el canvas del sitio (anillos de historias) se puede ocultar segun el tema;
+   el nuestro nunca */
+html[data-au] canvas:not(#au-confeti){visibility:var(--au-canvas) !important}
 
-/* los iconos del sitio: si no se pintan, en fondo oscuro desaparecen */
-html[data-au] svg{color:var(--au-tinta) !important; fill:var(--au-tinta) !important}
-html[data-au] nav svg{opacity:.92}
-
-/* el menu lateral */
-html[data-au] nav{
+/* ================= CONTENEDORES ================= */
+html[data-au] .au-panel{
   background-color:var(--au-papel) !important;
-  border-right:1px solid var(--au-linea) !important;
-  backdrop-filter:blur(10px);
+  border-right:var(--au-borde) solid var(--au-acento) !important;
 }
-html[data-au] nav a:hover, html[data-au] nav div[role="button"]:hover{
-  background-color:var(--au-linea) !important;
-  border-radius:var(--au-radio) !important;
+html[data-au] .au-caja{
+  background-color:var(--au-papel) !important;
+  border:var(--au-borde) solid var(--au-acento) !important;
+  box-shadow:var(--au-sombra) !important;
+  margin-bottom:20px !important;
+}
+html[data-au] main aside.au-caja{padding:14px !important}
+html[data-au] div[role="presentation"]:has(canvas),
+html[data-au] div[role="presentation"]:has(.au-avatar){
+  background-color:var(--au-papel) !important;
+  border:var(--au-borde) solid var(--au-acento) !important;
+  box-shadow:var(--au-sombra) !important;
+  padding:12px !important;
 }
 
-/* publicaciones */
-html[data-au] article{
+/* ================= CAMPOS ================= */
+html[data-au] .au-entrada.au-entrada{
   background-color:var(--au-papel) !important;
-  border:1px solid var(--au-linea) !important;
-  border-radius:var(--au-radio) !important;
+  color:var(--au-tinta) !important;
+  border:2px solid var(--au-acento) !important;
+  font-family:var(--au-txt) !important;
+  padding:8px 12px !important;
+  box-sizing:border-box !important;
+  max-width:100% !important;
+}
+html[data-au] .au-entrada::placeholder{color:var(--au-tinta2) !important}
+
+/* ================= NOTAS Y GLOBITOS =================
+   Cajitas de medida justa. Al cambiar la tipografia el texto crece y saca
+   una barra de scroll que se ve como un control roto. Se recortan. */
+html[data-au] .au-nota.au-nota{
   overflow:hidden !important;
-  margin-bottom:18px !important;
+  padding:4px 7px !important;
+  box-sizing:border-box !important;
+  /* dos renglones exactos: si se deja libre, el tercero queda cortado a la mitad */
+  max-height:34px !important;
+}
+html[data-au] .au-nota.au-nota,
+html[data-au] .au-nota.au-nota *{
+  font-size:10px !important;
+  line-height:13px !important;
+  overflow:hidden !important;
+  overflow-wrap:break-word !important;
 }
 
-/* la columna de la derecha y la fila de historias, cada una en su tarjeta */
-html[data-au] main aside,
-html[data-au] main > div > div:last-child > div:first-child,
-html[data-au] div[role="presentation"]:has(canvas){
-  background-color:var(--au-papel) !important;
-  border:1px solid var(--au-linea) !important;
-  border-radius:var(--au-radio) !important;
-  padding:14px !important;
+/* ================= BARRAS DE SCROLL ================= */
+html[data-au] ::-webkit-scrollbar{width:12px;height:12px}
+html[data-au] ::-webkit-scrollbar-track{background:var(--au-fondo)}
+html[data-au] ::-webkit-scrollbar-thumb{background:var(--au-acento);border:2px solid var(--au-fondo)}
+html[data-au] ::-webkit-scrollbar-thumb:hover{background:var(--au-acento2)}
+html[data-au] ::-webkit-scrollbar-button{display:none}
+html[data-au] ::-webkit-scrollbar-corner{background:var(--au-fondo)}
+
+/* ================= NADA SE DESBORDA ================= */
+html[data-au] main span, html[data-au] main div, html[data-au] main p{
+  min-width:0 !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
 }
 
-/* la burbuja flotante de mensajes */
+/* ================= BURBUJA FLOTANTE ================= */
 html[data-au] body > div > div > div[style*="position: fixed"],
 html[data-au] body > div > div > div[style*="position:fixed"]{
   background-color:var(--au-papel) !important;
-  border:1px solid var(--au-linea) !important;
-  border-radius:99px !important;
+  border:var(--au-borde) solid var(--au-acento) !important;
+  box-shadow:var(--au-sombra) !important;
 }
 
-/* el pie de pagina */
-html[data-au] footer, html[data-au] footer *{color:var(--au-tinta2) !important}
-html[data-au] hr, html[data-au] div[style*="border-top"]{border-color:var(--au-linea) !important}
+/* ================= LO NUESTRO ================= */
+html[data-au] #au-barra{
+  background:var(--au-acento) !important;
+  border-bottom:var(--au-borde) solid var(--au-tinta) !important;
+}
+html[data-au] #au-barra *{color:var(--au-fondo) !important; fill:var(--au-fondo) !important}
+html[data-au] #au-barra b{font-family:var(--au-tit) !important; font-size:12px !important}
 
-html[data-au] img{border-radius:8px}
-
-/* la barra de arriba */
-/* lo nuestro no se deja pisar por las reglas de arriba */
-html[data-au] #au-barra{background:var(--au-acento) !important}
-html[data-au] #au-barra *{color:#fff !important; fill:#fff !important}
 html[data-au] #au-tarjeta{
   background:linear-gradient(120deg, var(--au-acento), var(--au-acento2)) !important;
+  border:var(--au-borde) solid var(--au-acento2) !important;
 }
 html[data-au] #au-tarjeta *{color:#fff !important}
+html[data-au] #au-tarjeta h2{font-family:var(--au-tit) !important; font-size:24px !important; line-height:1.4 !important}
+
 html[data-au] #au-aviso{background:#ffffff !important}
 html[data-au] #au-aviso, html[data-au] #au-aviso *{color:#12171f !important}
 
 #au-barra{
   position:fixed; top:0; left:0; right:0; height:44px; z-index:2147483000;
   display:flex; align-items:center; gap:12px; padding:0 16px;
-  background:var(--au-acento); color:#fff;
-  font-family:var(--au-txt); font-size:13px; font-weight:600;
-  box-shadow:0 2px 14px rgba(0,0,0,.16);
+  background:#5b6cff; color:#fff;
+  font-family:"Segoe UI",system-ui,sans-serif; font-size:13px; font-weight:600;
+  box-shadow:0 2px 14px rgba(0,0,0,.2);
 }
-#au-barra b{font-family:var(--au-tit); font-size:15px; letter-spacing:-.01em}
-#au-barra .au-sep{opacity:.55; font-weight:400}
-#au-barra .au-motivos{margin-left:auto; font-size:16px; letter-spacing:.16em; opacity:.85}
+#au-barra b{font-size:15px; letter-spacing:-.01em}
+#au-barra .au-sep{opacity:.62; font-weight:400}
+#au-barra .au-motivos{margin-left:auto; font-size:16px; letter-spacing:.16em; opacity:.9}
 #au-barra .au-x{
-  border:0; background:rgba(255,255,255,.2); color:#fff; border-radius:99px;
+  border:0; background:rgba(255,255,255,.22); color:#fff; border-radius:99px;
   padding:5px 12px; font:inherit; cursor:pointer;
 }
-#au-barra .au-x:hover{background:rgba(255,255,255,.34)}
-html[data-au] body{padding-top:44px !important}
+#au-barra .au-x:hover{background:rgba(255,255,255,.36)}
 
-/* lo que la conexion decidio vestir */
-html[data-au] .au-zona{
-  background:var(--au-papel) !important;
-  border-radius:var(--au-radio) !important;
-  position:relative; z-index:1;
-}
-html[data-au] .au-tarjeta{
-  border-radius:var(--au-radio) !important;
-  overflow:hidden !important;
-  box-shadow:0 6px 20px rgba(0,0,0,.10) !important;
-  transition:transform .18s ease;
-}
-html[data-au] .au-tarjeta:hover{transform:translateY(-3px)}
-html[data-au] .au-tit{
-  font-family:var(--au-tit) !important;
-  color:var(--au-acento) !important;
-  letter-spacing:-.01em !important;
-}
-html[data-au] a{color:var(--au-acento) !important}
-html[data-au] button:not(.au-x){border-radius:calc(var(--au-radio) / 2) !important}
-
-/* la tarjeta de presentacion que se mete arriba del contenido */
 #au-tarjeta{
   position:relative; z-index:1; margin:0 auto 22px; max-width:960px;
-  background:linear-gradient(120deg, var(--au-acento), var(--au-acento2));
-  color:#fff; border-radius:var(--au-radio); padding:22px 26px;
-  font-family:var(--au-txt); box-shadow:0 12px 30px rgba(0,0,0,.16);
-  overflow:hidden;
+  background:linear-gradient(120deg,#5b6cff,#8b5cf6);
+  color:#fff; border-radius:14px; padding:22px 26px;
+  font-family:"Segoe UI",system-ui,sans-serif;
+  box-shadow:0 12px 30px rgba(0,0,0,.2); overflow:hidden;
 }
-#au-tarjeta h2{
-  font-family:var(--au-tit); font-size:26px; margin:0 0 6px; letter-spacing:-.02em;
-}
-#au-tarjeta p{margin:0; font-size:14px; line-height:1.55; opacity:.94; max-width:620px}
+#au-tarjeta h2{font-size:24px; margin:0 0 6px; letter-spacing:-.02em}
+#au-tarjeta p{margin:0; font-size:14px; line-height:1.55; opacity:.95; max-width:620px}
 #au-tarjeta .au-deco{
   position:absolute; right:-4px; top:50%; transform:translateY(-50%);
   font-size:58px; letter-spacing:.1em; opacity:.18; pointer-events:none;
 }
 #au-tarjeta .au-etiqueta{
-  display:inline-block; background:rgba(255,255,255,.22); border-radius:99px;
+  display:inline-block; background:rgba(255,255,255,.24); border-radius:99px;
   padding:3px 11px; font-size:11px; font-weight:700; letter-spacing:.05em;
   text-transform:uppercase; margin-bottom:10px;
 }
@@ -183,8 +281,92 @@ html[data-au] button:not(.au-x){border-radius:calc(var(--au-radio) / 2) !importa
   background:#ffffff; color:#12171f;
   padding:14px 18px; border-radius:14px;
   border:1px solid rgba(18,23,31,.14);
-  font-family:"Segoe UI", system-ui, sans-serif; font-size:13px; font-weight:600;
+  font-family:"Segoe UI",system-ui,sans-serif; font-size:13px; font-weight:600;
   max-width:320px; line-height:1.5;
   box-shadow:0 12px 34px rgba(0,0,0,.22);
   isolation:isolate;
+}
+
+/* ================= LA INTRO ================= */
+#au-intro{
+  position:fixed; inset:0; z-index:2147483646; pointer-events:none;
+  background:#0b0b12; overflow:hidden;
+  --a:#5b6cff; --b:#8b5cf6; --t:#f4f6fb;
+  --ft:"Segoe UI",system-ui,sans-serif; --fx:"Segoe UI",system-ui,sans-serif;
+  animation:au-entra .3s ease both; transition:background .6s ease;
+}
+#au-intro.au-sale{animation:au-sale .8s cubic-bezier(.65,0,.35,1) forwards}
+@keyframes au-entra{from{opacity:0}to{opacity:1}}
+@keyframes au-sale{0%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 0 100% 0)}}
+
+#au-confeti{position:absolute; inset:0; width:100%; height:100%; display:block !important}
+#au-rejilla{
+  position:absolute; inset:0; opacity:.5;
+  background-image:linear-gradient(var(--a) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--a) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(circle at 50% 45%,#000 10%,transparent 72%);
+  -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 10%,transparent 72%);
+  animation:au-flota 9s linear infinite;
+}
+@keyframes au-flota{to{background-position:44px 44px}}
+#au-crt{
+  position:absolute; inset:0; pointer-events:none; opacity:.16;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.9) 0 1px,transparent 1px 3px);
+}
+#au-scan{
+  position:absolute; left:0; right:0; height:3px; top:0;
+  background:linear-gradient(90deg,transparent,var(--a),var(--b),var(--a),transparent);
+  box-shadow:0 0 26px 7px var(--a);
+  animation:au-scan 2.1s cubic-bezier(.5,0,.5,1) infinite;
+}
+@keyframes au-scan{0%{top:-4px;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:100%;opacity:0}}
+
+#au-centro{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; text-align:center; padding:24px;
+}
+#au-logo{
+  font-family:var(--fx); font-weight:800; font-size:clamp(22px,4.4vw,46px);
+  letter-spacing:.08em; color:var(--t);
+  text-shadow:3px 0 0 var(--a),-3px 0 0 var(--b),0 3px 0 var(--a),0 0 34px var(--a);
+  animation:au-pop .55s cubic-bezier(.34,1.56,.64,1) both;
+}
+#au-sub{
+  font-family:var(--ft); font-size:clamp(11px,1.4vw,14px); color:var(--t);
+  opacity:.55; letter-spacing:.22em; text-transform:uppercase; margin-bottom:14px;
+  animation:au-pop .55s cubic-bezier(.34,1.56,.64,1) .12s both;
+}
+#au-linea1{
+  font-family:var(--ft); font-size:clamp(11px,1.5vw,15px); color:var(--t);
+  opacity:.9; min-height:1.5em; letter-spacing:.03em;
+}
+#au-nombre{
+  font-family:var(--fx); font-weight:800; font-size:clamp(15px,2.6vw,30px); color:var(--t);
+  letter-spacing:.03em; min-height:1.3em; opacity:0;
+  text-shadow:0 0 26px var(--a),2px 2px 0 var(--b);
+}
+#au-nombre.au-ver{opacity:1; animation:au-pop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes au-pop{from{transform:scale(.72) translateY(16px);opacity:0}to{transform:none;opacity:1}}
+#au-barrita{
+  width:min(280px,64vw); height:8px; border:2px solid var(--a);
+  background:transparent; margin-top:12px; overflow:hidden; position:relative;
+}
+#au-barrita i{
+  position:absolute; top:0; left:-40%; height:100%; width:40%;
+  background:var(--a); animation:au-corre 1.15s linear infinite;
+}
+#au-barrita.au-full i{animation:none; left:0; width:100%}
+@keyframes au-corre{to{left:105%}}
+
+/* ================= TELEFONO ================= */
+@media(max-width:640px){
+  #au-barra{height:40px; padding:0 10px; gap:8px; font-size:11px}
+  #au-barra b{font-size:12px}
+  #au-barra .au-sep{display:none}
+  html[data-au] body{padding-top:40px !important}
+  #au-tarjeta{padding:16px 18px; margin-bottom:16px}
+  #au-tarjeta h2{font-size:19px !important}
+  #au-tarjeta .au-deco{font-size:40px; opacity:.14}
+  #au-aviso{left:10px; right:10px; bottom:10px; max-width:none}
 }

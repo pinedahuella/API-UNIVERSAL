@@ -111,6 +111,12 @@ Devolve SOLO este JSON:
  }
 }
 
+Sobre "duro": ponelo en true cuando el tema pida algo firme y sin curvas
+(arcade, 8 bits, taller mecanico, deportes, videojuegos, tecnologia dura). Con duro
+en true los bordes salen gruesos, la sombra dura, las fotos pixeladas y conviene
+"radio":"0px" con fuente Pixel o Mono y "mayus":true. Con duro en false todo sale
+suave y redondeado.
+
 Reglas: usa SOLO selectores que aparezcan en el esqueleto, copiados tal cual. No elijas
 zonas gigantes que cubran toda la pantalla (h mayor a 2000) como "zonas". Si "oscuro" es
 true el fondo va oscuro y el acento claro; si es false el fondo va claro pero nunca blanco.

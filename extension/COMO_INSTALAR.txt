@@ -1,6 +1,9 @@
 API UNIVERSAL - extension de Chrome
 
-1. Arrancar el servidor:  doble clic a INICIAR.bat  (o: node servidor/servidor.js)
+INSTALAR (una sola vez)
+
+1. Arrancar el servidor: doble clic a INICIAR.bat
+   (o en una consola: node servidor/servidor.js)
 
 2. En Chrome abrir:  chrome://extensions
 
@@ -9,12 +12,30 @@ API UNIVERSAL - extension de Chrome
 4. Boton "Cargar descomprimida" y senalar esta carpeta:
    C:\Users\memit\OneDrive - Universidad del Istmo\EMPRENDIMIENTO\API-UNIVERSAL\extension
 
-5. Entrar a Instagram, hacer clic en el icono de la extension,
-   escribir de que es la pagina (por ejemplo: un vivero de plantas)
-   y darle a "Vestir esta pagina".
+USAR
 
-Queda instalada. Para dejar la pagina como estaba: boton "Quitar" en la
-barra verde, o "Dejarla como estaba" en el popup.
+Entrar a Instagram, hacer clic en el icono de la extension, escribir de que es
+la pagina (por ejemplo: un vivero de plantas, un salon de maquinitas arcade) y
+darle a "Vestir esta pagina".
 
-Nota: la extension NO cambia nada en Instagram. Solo cambia el CSS en este
-navegador. Al quitarla, la pagina vuelve a ser la de siempre.
+Arranca una animacion que va contando lo que hace mientras la conexion piensa.
+Cuando el diseno esta listo salta el confeti y la pagina queda vestida.
+
+Para dejar la pagina como estaba: boton "Quitar" en la barra de arriba.
+
+DESPUES DE CAMBIAR LOS ARCHIVOS
+
+Chrome no recarga sola la extension. Hay que ir a chrome://extensions y darle
+al boton de recargar (la flecha circular) en la tarjeta de API UNIVERSAL, y
+despues recargar la pagina.
+
+BANCO DE PRUEBAS
+
+http://localhost:4321/servidor/prueba.html es una pagina de mentira con las
+partes dificiles (filas de lista anchas, notas que desbordan, anillos de
+historias) para probar cambios sin depender de Instagram.
+
+NOTA
+
+La extension NO cambia nada en Instagram. Solo cambia el CSS en este navegador.
+Al quitarla, la pagina vuelve a ser la de siempre.

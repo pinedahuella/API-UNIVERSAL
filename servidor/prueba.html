@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banco de pruebas</title>
+<style>
+  body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:#fff;color:#111}
+  .disposicion{display:flex;gap:24px;max-width:1100px;margin:0 auto;padding:20px}
+  nav{width:220px;flex:none;position:sticky;top:20px;height:min-content}
+  nav a{display:flex;align-items:center;gap:10px;padding:10px;text-decoration:none;color:#111}
+  nav svg{width:22px;height:22px}
+  main{flex:1;min-width:0}
+  article{border:1px solid #dbdbdb;border-radius:8px;margin-bottom:20px;background:#fff}
+  .cab{display:flex;align-items:center;gap:10px;padding:12px}
+  .cab img{width:36px;height:36px;border-radius:50%}
+  article > img{width:100%;display:block}
+  aside{width:300px;flex:none}
+  .sug{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .sug img{width:44px;height:44px;border-radius:50%}
+  .sug .txt{flex:1;min-width:0}
+  .sug b{display:block;font-size:14px}
+  .sug span{font-size:12px;color:#737373}
+  /* fila de lista, como una conversacion: es un div[role=button] ANCHO */
+  .fila{display:flex;gap:12px;align-items:center;padding:8px 20px;cursor:pointer}
+  .fila img{width:56px;height:56px;border-radius:50%}
+  /* nota con medida justa: su texto desborda por poco y saca barra */
+  .nota{width:78px;height:38px;overflow-y:auto;font-size:12px;
+        border:1px solid #dbdbdb;border-radius:14px;padding:4px 6px;text-align:center}
+  .historias{display:flex;gap:14px;padding:14px;border:1px solid #dbdbdb;border-radius:8px;margin-bottom:20px}
+  .historia{text-align:center;width:78px}
+  .historia canvas{width:66px;height:66px;display:block;margin:0 auto}
+  .historia img{width:56px;height:56px;border-radius:50%;margin-top:-61px;position:relative}
+  input{padding:8px 12px;border:1px solid #dbdbdb;border-radius:8px;width:100%;box-sizing:border-box}
+  footer{padding:20px;font-size:12px;color:#737373}
+  h2{font-size:16px}
+</style>
+</head>
+<body>
+<div class="disposicion">
+  <nav role="navigation">
+    <a href="#"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11l9-8 9 8v10H3z"/></svg>Inicio</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>Buscar</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="18" height="14"/></svg>Mensajes</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg>Perfil</a>
+  </nav>
+
+  <main role="main">
+    <div role="presentation" class="historias">
+      <div class="historia">
+        <div class="nota">Escuchando lo mismo desde el martes</div>
+        <canvas width="66" height="66"></canvas>
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23b0c4d8'/%3E%3C/svg%3E" alt="foto de perfil">
+        <div style="font-size:12px">tu nota</div>
+      </div>
+      <div class="historia">
+        <canvas width="66" height="66"></canvas>
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23d8b0c4'/%3E%3C/svg%3E" alt="foto de perfil">
+        <div style="font-size:12px">ana</div>
+      </div>
+      <div class="historia">
+        <canvas width="66" height="66"></canvas>
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23c4d8b0'/%3E%3C/svg%3E" alt="foto de perfil">
+        <div style="font-size:12px">luis</div>
+      </div>
+    </div>
+
+    <input type="text" placeholder="Buscar algo" style="margin-bottom:20px">
+
+    <h2>Conversaciones</h2>
+    <div role="button" class="fila" tabindex="0">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23a8b8c8'/%3E%3C/svg%3E" alt="foto de perfil">
+      <div><b>Luis Solís</b><div style="font-size:13px;color:#737373">3 mensajes nuevos · 45m</div></div>
+    </div>
+    <div role="button" class="fila" tabindex="0">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Crect width='56' height='56' fill='%23c8a8b8'/%3E%3C/svg%3E" alt="foto de perfil">
+      <div><b>Ana Pérez</b><div style="font-size:13px;color:#737373">te mandó una foto · 3h</div></div>
+    </div>
+
+    <h2 style="margin-top:24px">Publicaciones</h2>
+    <article>
+      <div class="cab">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Crect width='36' height='36' fill='%23889'/%3E%3C/svg%3E" alt="foto de perfil">
+        <b>casa.rocky</b><span style="color:#737373;font-size:13px">· 1d</span>
+      </div>
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='420'%3E%3Crect width='600' height='420' fill='%23cfd8e3'/%3E%3C/svg%3E" alt="publicación">
+      <div style="padding:12px"><b>Rocky aprendió a dar la pata</b>
+        <p style="margin:6px 0 0;font-size:14px">Le costó al principio pero ya no para.</p></div>
+    </article>
+  </main>
+
+  <aside>
+    <h2>Sugerencias</h2>
+    <div class="sug">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Crect width='44' height='44' fill='%23bcc'/%3E%3C/svg%3E" alt="foto de perfil">
+      <div class="txt"><b>Simone</b><span>Seguido por not_dxjeef</span></div>
+      <div role="button" tabindex="0" style="color:#0095f6;font-weight:600;font-size:12px">Seguir</div>
+    </div>
+    <div class="sug">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Crect width='44' height='44' fill='%23ccb'/%3E%3C/svg%3E" alt="foto de perfil">
+      <div class="txt"><b>Kenzie Smith</b><span>Sugerido para vos</span></div>
+      <div role="button" tabindex="0" style="color:#0095f6;font-weight:600;font-size:12px">Seguir</div>
+    </div>
+    <footer>Acerca de · Ayuda · Prensa · API · Empleo · Privacidad<br>© 2026 SITIO DE PRUEBA</footer>
+  </aside>
+</div>
+
+<script>
+/* los anillos de las historias, como los dibuja el sitio real */
+document.querySelectorAll('.historia canvas').forEach((c,i)=>{
+  const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,66,66);
+  g.addColorStop(0,'#f09433'); g.addColorStop(.5,'#dc2743'); g.addColorStop(1,'#bc1888');
+  x.strokeStyle=g; x.lineWidth=3; x.beginPath(); x.arc(33,33,30,0,Math.PI*2); x.stroke();
+});
+</script>
+</body>
+</html>

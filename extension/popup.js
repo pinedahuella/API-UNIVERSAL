@@ -24,9 +24,10 @@ function mandar(msg, luego){
 $('#vestir').onclick = () => {
   const tema = $('#tema').value.trim();
   if(!tema){ $('#msg').textContent = 'Escribí de qué es tu página.'; return; }
-  $('#msg').textContent = 'Pidiéndole el diseño a la conexión...';
+  $('#msg').textContent = 'Mirá la página: ya empezó. Podés cerrar esto.';
   mandar({ tipo:'vestir', tema }, r => {
-    $('#msg').textContent = r?.ok ? ('Listo: ' + (r.titulo || '')) : ('No se pudo: ' + (r?.error || ''));
+    if(r?.ok) $('#msg').textContent = 'Listo: ' + (r.titulo || '');
+    else if(r) $('#msg').textContent = 'No se pudo: ' + (r.error || '');
   });
 };
 
