@@ -81,7 +81,58 @@ const CONTENIDO = {
   ]
 };
 
+/* publicaciones que mezclan dos intereses: solo aparecen si le gustan los dos */
+const COMBOS = [
+  { temas:['perros','viajes'],       tit:'Me llevé al perro de viaje y fue la mejor idea',
+    txt:'Aguantó las cuatro horas de carretera mejor que yo.' },
+  { temas:['perros','futbol'],       tit:'Mi perro se metió a la cancha en pleno partido',
+    txt:'Paramos veinte minutos y nadie se enojó.' },
+  { temas:['gatos','musica'],        tit:'A mi gata le gusta una sola canción',
+    txt:'Se acuesta en la bocina cada vez que suena.' },
+  { temas:['gatos','tecnologia'],    tit:'Le hice una puertita automática al gato',
+    txt:'Un sensor, un motorcito y ya entra solo.' },
+  { temas:['futbol','comida'],       tit:'Qué comer viendo el partido sin que se enfríe',
+    txt:'Lo mío son las tostadas, no fallan.' },
+  { temas:['tecnologia','videojuegos'], tit:'Armé la computadora con lo justo para jugar',
+    txt:'Me salió la mitad de lo que pedían por una hecha.' },
+  { temas:['musica','arte'],         tit:'Pinté escuchando la misma lista tres semanas',
+    txt:'El cuadro salió con el color de esa música.' },
+  { temas:['viajes','comida'],       tit:'Comí en un mercado de pueblo y no lo olvido',
+    txt:'Veinte quetzales y me levanté lleno.' },
+  { temas:['autos','viajes'],        tit:'Carretera al Atlántico en carro propio',
+    txt:'Salir de madrugada cambia todo el viaje.' },
+  { temas:['videojuegos','arte'],    tit:'Dibujé a mi personaje favorito del juego',
+    txt:'Me tardé más en la armadura que en la cara.' },
+  { temas:['autos','tecnologia'],    tit:'Le puse pantalla al carro con una tablet vieja',
+    txt:'Quedó mejor que la radio que traía.' },
+  { temas:['perros','gatos'],        tit:'Perro y gato en la misma casa, ¿se puede?',
+    txt:'Los primeros días fue guerra, ahora duermen juntos.' }
+];
+
 const NOMBRES = ['Ana','Luis','Sofía','Diego','Marta','Kevin','Lucía','Pablo','Rita','Andrés','Vale','Nico'];
+
+/* imagen de la publicacion, dibujada aqui mismo, sin archivos */
+function imagen(temas){
+  const ids = [].concat(temas);
+  const c1 = INTERESES.find(i => i.id === ids[0]).color;
+  const c2 = INTERESES.find(i => i.id === (ids[1] || ids[0])).color;
+  const emo = ids.map(id => INTERESES.find(i => i.id === id).emoji);
+  const semilla = ids.join('').length * 7;
+  const puntos = [0,1,2,3,4].map(n => {
+    const x = (semilla * (n + 3) * 13) % 100;
+    const y = (semilla * (n + 5) * 7) % 100;
+    const r = 6 + ((semilla + n * 11) % 14);
+    return `<circle cx="${x}%" cy="${y}%" r="${r}" fill="#fff" opacity=".13"/>`;
+  }).join('');
+  const g = 'g' + Math.random().toString(36).slice(2, 8);
+  return `<div class="foto"><svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/>
+    </linearGradient></defs>
+    <rect width="400" height="200" fill="url(#${g})"/>${puntos}
+    <text x="200" y="128" font-size="76" text-anchor="middle">${emo.join(' ')}</text>
+  </svg></div>`;
+}
 
 /* ---------------- estado ---------------- */
 const LS = 'apiuniversal_usuarios';
@@ -105,6 +156,10 @@ function consultarAPI(perfil){
   const total = orden.reduce((s,[,v]) => s+v, 0) || 1;
 
   const fuera = INTERESES.map(i => i.id).filter(id => !perfil.pesos[id]);
+  const activos = orden.map(([k]) => k);
+  const mezclas = COMBOS
+    .filter(c => c.temas.every(t => activos.includes(t)))
+    .slice(0, 2);
 
   return {
     usuario: perfil.user,
@@ -116,6 +171,7 @@ function consultarAPI(perfil){
       tema: k, peso: Math.round(v/total*100) + '%'
     })),
     para_descubrir: fuera.slice(0,3),
+    mezclas,
     seccion_sugerida: perfil.uso,
     consulta: consultas
   };
@@ -239,20 +295,15 @@ function aplicar(mensaje){
   document.documentElement.style.setProperty('--acento-2', r.acento + '99');
 
   const pri = INTERESES.find(i => i.id === r.interes_principal);
-  $('#aviso').innerHTML = `<strong>${mensaje}</strong> Esta pantalla se armó con tus datos: ` +
-    `lo que más te interesa ahorita es <strong>${pri.nombre} ${pri.emoji}</strong>, ` +
-    `así que el color, el orden y lo que ves salieron de ahí.`;
+  const extra = r.mezclas.length
+    ? ` También te juntamos cosas de <strong>${r.mezclas[0].temas
+        .map(t => INTERESES.find(i => i.id === t).nombre).join(' y ')}</strong>, porque te gustan las dos.`
+    : '';
+  $('#aviso').innerHTML = `<strong>${mensaje}</strong> Esta pantalla se armó para vos: ` +
+    `lo que más estás viendo es <strong>${pri.nombre} ${pri.emoji}</strong>, ` +
+    `así que de ahí salieron el color y el orden.` + extra;
 
-  $('#api-json').textContent = JSON.stringify({
-    usuario: r.usuario,
-    interes_principal: r.interes_principal,
-    acento: r.acento,
-    tema: r.tema,
-    reparto: r.reparto,
-    seccion_sugerida: r.seccion_sugerida
-  }, null, 1);
-  $('#api-tiempo').textContent = `Consulta n.° ${r.consulta} · respondida al instante`;
-
+  pintarDescubrir(r);
   pintarFeed(r);
   pintarTemas(r);
   pintarVideo(r);
@@ -264,30 +315,32 @@ function pintarFeed(r){
   feed.innerHTML = '';
 
   (usuario.posts || []).slice().reverse().forEach(p => {
-    feed.appendChild(tarjetaPost(usuario.nombre, p.texto, 'Tuyo', '', p.emoji));
+    feed.appendChild(tarjetaPost(usuario.nombre, { temas:[p.tema], txt:p.texto, tit:'' }, 0));
   });
 
   const lista = [];
   r.orden_del_feed.forEach((tema, idx) => {
     const cuantos = idx === 0 ? 3 : (idx === 1 ? 2 : 1);
-    const info = INTERESES.find(i => i.id === tema);
     CONTENIDO[tema].slice(0, cuantos).forEach(([tit, txt]) => {
-      lista.push({ tema, info, tit, txt });
+      lista.push({ temas:[tema], tit, txt });
     });
   });
 
+  /* mezclas: si le gustan dos cosas, aparece contenido de las dos juntas */
+  r.mezclas.forEach(m => lista.splice(Math.min(2, lista.length), 0, {
+    temas:m.temas, tit:m.tit, txt:m.txt, mezcla:true
+  }));
+
   lista.forEach((it, i) => {
     const autor = NOMBRES[(i * 5 + it.tit.length) % NOMBRES.length];
-    feed.appendChild(tarjetaPost(autor, it.txt, it.info.nombre, it.tit, it.info.emoji, it.tema));
+    feed.appendChild(tarjetaPost(autor, it, i));
   });
 
   /* cosas que todavia no le interesan, para que pueda descubrir */
   r.para_descubrir.forEach((tema, i) => {
-    const info = INTERESES.find(v => v.id === tema);
     const [tit, txt] = CONTENIDO[tema][0];
     const autor = NOMBRES[(i * 3 + 7) % NOMBRES.length];
-    feed.appendChild(
-      tarjetaPost(autor, txt, 'Sugerido: ' + info.nombre, tit, info.emoji, tema, true));
+    feed.appendChild(tarjetaPost(autor, { temas:[tema], tit, txt, sugerido:true }, i));
   });
 
   if(!lista.length){
@@ -296,43 +349,106 @@ function pintarFeed(r){
   }
 }
 
-function tarjetaPost(autor, texto, etiqueta, titulo, emoji, tema, sugerido){
+function tarjetaPost(autor, it, i){
+  const infos = it.temas.map(t => INTERESES.find(v => v.id === t));
+  const etiqueta = it.sugerido ? 'Sugerido: ' + infos[0].nombre
+                 : infos.map(v => v.nombre).join(' + ');
   const d = document.createElement('div');
-  d.className = 'post' + (sugerido ? ' sugerido' : '');
+  d.className = 'post' + (it.sugerido ? ' sugerido' : '') + (it.mezcla ? ' mezcla' : '');
   d.innerHTML = `
     <div class="post-head">
       <span class="avatar">${autor.slice(0,2).toUpperCase()}</span>
       <b>${autor}</b>
-      <span class="etiqueta">${emoji || ''} ${etiqueta}</span>
+      <span class="etiqueta">${infos.map(v => v.emoji).join('')} ${etiqueta}</span>
     </div>
-    ${titulo ? `<p class="post-cuerpo"><b>${titulo}</b></p>` : ''}
-    <p class="post-cuerpo">${texto}</p>
+    ${it.tit ? `<p class="post-cuerpo"><b>${it.tit}</b></p>` : ''}
+    <p class="post-cuerpo">${it.txt}</p>
+    ${imagen(it.temas)}
     <div class="post-pie">
-      <span class="like">👍 Me gusta</span>
-      <span>💬 Comentar</span>
-    </div>`;
-  if(tema){
-    d.querySelector('.like').onclick = e => {
-      e.target.textContent = '👍 Te gustó';
-      const n = INTERESES.find(i => i.id === tema).nombre;
-      subirInteres(tema, sugerido ? 9 : 4,
-        sugerido ? `Te gustó algo de ${n}, así que ahora también te aparece.`
-                 : `Le diste me gusta a algo de ${n}.`);
+      <span class="like">🤍 Me gusta</span>
+      <span class="coment">💬 Comentar</span>
+      <span class="guardar">🔖 Guardar</span>
+    </div>
+    <div class="comentarios" hidden></div>`;
+
+  const sumar = () => {
+    const n = infos.map(v => v.nombre).join(' y ');
+    it.temas.forEach(t => usuario.pesos[t] = (usuario.pesos[t] || 0) + (it.sugerido ? 9 : 4));
+    persistir();
+    refrescarChips();
+    aplicar(it.sugerido ? `Te gustó algo de ${n}, así que ahora también te aparece.`
+                        : `Marcaste algo de ${n}.`);
+  };
+
+  d.querySelector('.like').onclick = e => {
+    if(e.target.dataset.on) return;
+    e.target.dataset.on = 1;
+    e.target.textContent = '❤️ Te gustó';
+    sumar();
+  };
+  d.querySelector('.guardar').onclick = e => {
+    if(e.target.dataset.on) return;
+    e.target.dataset.on = 1;
+    e.target.textContent = '🔖 Guardado';
+    sumar();
+  };
+  d.querySelector('.coment').onclick = () => {
+    const c = d.querySelector('.comentarios');
+    c.hidden = false;
+    if(c.childElementCount) return;
+    c.innerHTML = `<div class="coment-linea">
+        <input type="text" placeholder="Escribí un comentario...">
+        <button class="btn mini">Enviar</button></div>`;
+    const inp = c.querySelector('input');
+    const mandar = () => {
+      if(!inp.value.trim()) return;
+      const p = document.createElement('p');
+      p.className = 'coment-item';
+      p.innerHTML = `<b>${usuario.nombre}</b> ${inp.value.trim()}`;
+      c.insertBefore(p, c.firstChild);
+      inp.value = '';
+      it.temas.forEach(t => usuario.pesos[t] = (usuario.pesos[t] || 0) + 3);
+      persistir();
     };
-  }
+    c.querySelector('button').onclick = mandar;
+    inp.onkeydown = e => { if(e.key === 'Enter') mandar(); };
+    inp.focus();
+  };
   return d;
+}
+
+function persistir(){
+  const todos = usuarios();
+  todos[usuario.user] = usuario;
+  guardar(todos);
+}
+function refrescarChips(){
+  const cont = $('#perfil-chips');
+  if(!cont) return;
+  const top = Object.entries(usuario.pesos).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
+  [...cont.children].forEach(c => c.classList.toggle('on', top.includes(c.dataset.id)));
+}
+
+function pintarDescubrir(r){
+  const cont = $('#descubrir');
+  cont.innerHTML = '';
+  r.para_descubrir.forEach(t => {
+    const i = INTERESES.find(v => v.id === t);
+    const b = document.createElement('div');
+    b.className = 'chip';
+    b.textContent = i.emoji + ' ' + i.nombre;
+    b.onclick = () => subirInteres(t, 10, `Agregaste ${i.nombre} a lo que te gusta.`);
+    cont.appendChild(b);
+  });
+  if(!cont.childElementCount) cont.innerHTML = '<p class="tenue chico">Ya seguís todos los temas.</p>';
 }
 
 /* aqui esta lo que hace la demo: cada accion cambia el perfil
    y la pantalla se vuelve a armar sola */
 function subirInteres(tema, cuanto, mensaje){
   usuario.pesos[tema] = (usuario.pesos[tema] || 0) + cuanto;
-  const todos = usuarios(); todos[usuario.user] = usuario; guardar(todos);
-  const antes = $('#perfil-chips');
-  if(antes){
-    const top = Object.entries(usuario.pesos).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k);
-    [...antes.children].forEach(c => c.classList.toggle('on', top.includes(c.dataset.id)));
-  }
+  persistir();
+  refrescarChips();
   aplicar(mensaje);
 }
 
@@ -414,8 +530,8 @@ $('#post-enviar').onclick = () => {
   const t = $('#post-texto').value.trim();
   if(!t) return;
   const top = Object.entries(usuario.pesos).sort((a,b)=>b[1]-a[1])[0][0];
-  usuario.posts.push({ texto:t, emoji:INTERESES.find(i=>i.id===top).emoji });
-  const todos = usuarios(); todos[usuario.user] = usuario; guardar(todos);
+  usuario.posts.push({ texto:t, tema:top });
+  persistir();
   $('#post-texto').value = '';
   aplicar('Publicaste algo.');
 };
