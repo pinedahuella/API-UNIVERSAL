@@ -112,8 +112,12 @@ html[data-au] button:not(.au-x){border-radius:calc(var(--au-radio) / 2) !importa
 }
 
 #au-aviso{
-  position:fixed; right:16px; bottom:16px; z-index:2147483000;
-  background:var(--au-tinta); color:#fff; padding:11px 16px; border-radius:12px;
-  font-family:var(--au-txt); font-size:13px; max-width:300px; line-height:1.45;
-  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  position:fixed; left:16px; bottom:16px; z-index:2147483647;
+  background:#ffffff; color:#12171f;
+  padding:14px 18px; border-radius:14px;
+  border:1px solid rgba(18,23,31,.14);
+  font-family:"Segoe UI", system-ui, sans-serif; font-size:13px; font-weight:600;
+  max-width:320px; line-height:1.5;
+  box-shadow:0 12px 34px rgba(0,0,0,.22);
+  isolation:isolate;
 }

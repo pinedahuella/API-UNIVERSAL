@@ -79,20 +79,26 @@ function vestir(d, sel){
 function fondo(d){
   const a = conAlfa(d.acento, d.oscuro ? .26 : .40);
   const b = conAlfa(d.acento2, d.oscuro ? .22 : .34);
-  const motivos = (d.motivos || []).join(' ');
+  /* OJO: los motivos se quedan como arreglo. Si se juntan en un texto y se indexa
+     con [0], sale MEDIO emoji (media pareja subrogada) y encodeURIComponent revienta
+     con "URI malformed". */
+  const m = (Array.isArray(d.motivos) && d.motivos.length ? d.motivos : ['✨']);
+  const pieza = i => m[i % m.length];
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200">' +
-    '<text x="30" y="52" font-size="26" opacity=".07">' + motivos[0] + '</text>' +
-    '<text x="150" y="110" font-size="20" opacity=".06">' + (motivos[2] || motivos[0]) + '</text>' +
-    '<text x="70" y="170" font-size="22" opacity=".06">' + (motivos[4] || motivos[0]) + '</text>' +
+    '<text x="30" y="52" font-size="26" opacity=".07">' + pieza(0) + '</text>' +
+    '<text x="150" y="110" font-size="20" opacity=".06">' + pieza(1) + '</text>' +
+    '<text x="70" y="170" font-size="22" opacity=".06">' + pieza(2) + '</text>' +
     '</svg>';
-  const capas =
-    'url("data:image/svg+xml,' + encodeURIComponent(svg) + '"),' +
+  let patron = '';
+  try { patron = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '"),'; }
+  catch(e){ patron = ''; }
+  const capas = patron +
     'radial-gradient(900px 620px at 10% -6%,' + a + ',transparent 62%),' +
     'radial-gradient(760px 560px at 104% 106%,' + b + ',transparent 60%)';
   const e = document.body.style;
   e.setProperty('background-image', capas, 'important');
-  e.setProperty('background-repeat', 'repeat,no-repeat,no-repeat', 'important');
-  e.setProperty('background-attachment', 'scroll,fixed,fixed', 'important');
+  e.setProperty('background-repeat', patron ? 'repeat,no-repeat,no-repeat' : 'no-repeat,no-repeat', 'important');
+  e.setProperty('background-attachment', patron ? 'scroll,fixed,fixed' : 'fixed,fixed', 'important');
 }
 
 function barra(d){
