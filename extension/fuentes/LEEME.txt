@@ -1,0 +1,21 @@
+Tipografias empaquetadas con la extension.
+
+POR QUE ESTAN ACA Y NO SE BAJAN:
+la extension corre dentro de la pagina de otro, y la CSP de ese sitio
+bloquea bajar una fuente de la red. Ademas se midio que en esta maquina no
+hay NI UNA tipografia de pixeles instalada -Press Start 2P, Pixelify Sans,
+Small Fonts, Terminal y Fixedsys: ninguna-, asi que pedir "8 bits" caia a
+Courier New y no se veia de 8 bits por ningun lado. Empaquetadas, si.
+
+Las cuatro son de Google Fonts y estan bajo SIL Open Font License 1.1, que
+permite redistribuirlas junto con software. Texto de la licencia:
+https://openfontlicense.org
+
+  press-start-2p.woff2  Press Start 2P  - CodeMan38            - 8 bits de arcade
+  silkscreen.woff2      Silkscreen      - Jason Kottke         - pixeles finos
+  vt323.woff2           VT323           - Peter Hull           - terminal de tubo
+  bungee.woff2          Bungee          - David Jonathan Ross  - cartel/letrero
+
+Se registran con la API FontFace desde rearmar.js, no con @font-face dentro
+de la hoja: en una hoja construida las direcciones relativas se resuelven
+contra la pagina del SITIO, no contra la extension, y no cargarian.

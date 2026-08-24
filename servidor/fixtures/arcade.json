@@ -1,0 +1,33 @@
+{
+  "tema": "arcade de 8 bits, piezas de Tetris cayendo",
+  "contenido": {
+    "clase": "catalogo",
+    "flaco": false,
+    "porQueFlaco": "",
+    "sitio": "huellagames.com",
+    "titulo": "Entra a Mundos",
+    "lema": "Juegos hechos en Guatemala para jugar en el navegador, sin instalar nada.",
+    "marca": "huellagames",
+    "menu": ["Inicio", "MUNDOS", "Sagas", "Juegos", "Amigos"],
+    "tarjetas": [
+      "Chucho: Las Burbujas - Capitulo 1",
+      "Brizna y la Cocina",
+      "Chucho: El Parque de los Huesos",
+      "Brizna y el Mercado de Especias",
+      "Carrera de Chapines",
+      "La Torre del Cuco",
+      "Pepian Panic",
+      "Marimba Hero"
+    ],
+    "titulos": [
+      "Chucho: Las Burbujas - Capitulo 1",
+      "Brizna y la Cocina",
+      "Sagas",
+      "Amigos que juegan con nosotros"
+    ],
+    "muestra": [
+      "Chucho se cayo adentro de una fabrica de jabon y ahora todo el piso es espuma. Reventa las burbujas antes de que suban al techo, y cuidado con las moradas: esas rebotan dos veces y se llevan una vida.",
+      "Brizna cocina para el mercado entero con lo que le queda en la alacena. Cada nivel te da tres ingredientes y un tiempo; si el sarten se enfria, el plato ya no cuenta."
+    ]
+  }
+}

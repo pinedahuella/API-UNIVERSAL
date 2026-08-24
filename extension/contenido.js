@@ -14,9 +14,21 @@ const AU = {
   SERVIDOR: 'http://localhost:4321',
   guardado: null,
   puesto: false,
+  modo: null,            // 'vestido' (CSS encima del sitio) | 'rearmado' (HTML nuestro)
   observador: null,
-  iconos: []
+  iconos: [],
+  contenido: null,
+  /* la persona pidio ver el sitio de abajo (AU_ASOMARSE). Mientras este en
+     true NADA vuelve a armar: las relecturas seguian disparando y, al
+     encontrar mas contenido, montaban una capa nueva VISIBLE encima del
+     reproductor que la persona acababa de poner, y de paso lo pausaban. */
+  asomado: false
 };
+
+/* La memoria va POR SITIO. Con la extension corriendo en cualquier pagina,
+   una sola bandera "activo" hacia que el tema guardado en un sitio se
+   aplicara solo al abrir cualquier otro. */
+const LLAVE = 'sitio:' + location.origin;
 
 /* ============ 1. LEER LA ESTRUCTURA ============ */
 function estructura(){
@@ -29,7 +41,10 @@ function estructura(){
     const rol = e.getAttribute('role'), al = e.getAttribute('aria-label');
     if(rol) return e.tagName.toLowerCase() + '[role="' + rol + '"]';
     if(al && al.length < 26) return e.tagName.toLowerCase() + '[aria-label="' + al + '"]';
-    const c = [...e.classList].slice(0,2).map(x => '.' + x).join('');
+    /* NUNCA nuestras propias clases: la nav vestida se llamaba
+       "nav._ab8c.au-panel" y ese selector solo existe mientras esta puesto */
+    const c = [...e.classList].filter(x => !x.startsWith('au-'))
+                              .slice(0,2).map(x => '.' + x).join('');
     return e.tagName.toLowerCase() + c;
   };
 
@@ -168,7 +183,11 @@ function pathUsable(d){
   if(p.length < 20 || p.length > 4000) return null;
   if(!/^[Mm]/.test(p) || !D_VALIDO.test(p)) return null;
   try {
-    if(!_medidor){
+    /* quitar() borra #au-medidor y este puntero queda apuntando a un path
+       suelto. getBBox() sobre algo desprendido devuelve 0x0 SIN lanzar error,
+       asi que despues de un quitar+vestir TODO path dibujado se rechazaba en
+       silencio y siempre salian las marcas neutras. */
+    if(!_medidor || !_medidor.isConnected){
       const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
       svg.setAttribute('viewBox','0 0 24 24');
       svg.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none';
@@ -226,15 +245,57 @@ const PILAS = {
   'Space Grotesk':    '"Segoe UI",system-ui,Arial,sans-serif',
   'Playfair Display': 'Georgia,"Times New Roman",serif',
   'Lora':             'Georgia,"Book Antiqua",serif',
-  'Pixel':            '"Press Start 2P","Courier New",Consolas,monospace',
-  'Mono':             '"Courier New",Consolas,monospace'
+  /* estas cuatro viajan DENTRO de la extension (ver extension/fuentes):
+     no hay ni una tipografia de pixeles instalada en Windows, asi que
+     sin empaquetarlas "8 bits" terminaba en Courier New */
+  'Press Start 2P':   '"Press Start 2P","Silkscreen","Courier New",monospace',
+  'Silkscreen':       '"Silkscreen","Press Start 2P","Courier New",monospace',
+  'VT323':            '"VT323","Lucida Console","Courier New",monospace',
+  'Bungee':           '"Bungee",Impact,"Arial Black",sans-serif',
+  'Pixel':            '"Press Start 2P","Silkscreen","Courier New",monospace',
+  'Mono':             '"Courier New",Consolas,monospace',
+  /* atajos con nombre, para que la conexion no tenga que acordarse de la
+     pila entera. Cualquier otro nombre de fuente instalada tambien vale. */
+  'Windows 95':       '"MS Sans Serif","Microsoft Sans Serif",Tahoma,sans-serif',
+  'Antigua':          'Papyrus,"Old English Text MT","Book Antiqua",serif',
+  'Manuscrita':       '"Edwardian Script ITC","Brush Script MT","Segoe Script",cursive',
+  'Infantil':         '"Curlz MT","Comic Sans MS","Ink Free",cursive',
+  'Titular':          '"Cooper Black",Broadway,Elephant,"Arial Black",sans-serif',
+  'Maquina':          '"Courier New",Consolas,"Lucida Console",monospace'
 };
-const pila = n => PILAS[n] || PILAS['Space Grotesk'];
+/* Ocho tipografias no alcanzan. Windows trae 91 de las 100 que probe
+   -Papyrus, Old English Text MT, Cooper Black, MS Sans Serif, Curlz MT,
+   Jokerman, Edwardian Script...- y estan TODAS instaladas, no hay que bajar
+   nada. Asi que la conexion puede mandar cualquier nombre de fuente y aca
+   se acepta, con respaldo por si en esa maquina no esta.
 
-/* ============ 4. VESTIR ============ */
-function vestir(d){
+   Se limpia el nombre porque va derecho a una propiedad CSS: una comilla o
+   un punto y coma sueltos cierran la declaracion y abren otra. */
+function pila(n){
+  const nombre = String(n == null ? '' : n).trim();
+  if(PILAS[nombre]) return PILAS[nombre];
+  if(/^[\w .\-]{2,42}$/.test(nombre)){
+    const generica = /script|hand|corsiva|vivaldi|brush|gigi|curlz|mistral/i.test(nombre) ? 'cursive'
+                   : /courier|consolas|console|mono|terminal|fixedsys/i.test(nombre) ? 'monospace'
+                   : /papyrus|old english|garamond|antiqua|palatino|bookman|goudy|centaur|perpetua|baskerville|georgia|cambria|constantia|rockwell|elephant|castellar|engravers|felix|colonna|bell mt|high tower|times/i.test(nombre) ? 'serif'
+                   : 'sans-serif';
+    return '"' + nombre + '",' + generica;
+  }
+  return PILAS['Space Grotesk'];
+}
+
+/* ============ 4. VESTIR ============
+   Dos modos, y la diferencia es de fondo:
+
+   - VESTIDO: el CSS del sitio se pisa y sus elementos se clasifican. La
+     pagina sigue siendo la suya, con nuestra ropa.
+   - REARMADO: se LEE su contenido y se levanta HTML nuestro encima. No se
+     le toca un solo nodo, asi que no hay nada que restaurar despues.
+
+   Los dos comparten el tema, que es lo que sigue. */
+function ponerTema(d, marcarSitio){
   const raiz = document.documentElement;
-  raiz.setAttribute('data-au', '1');
+  if(marcarSitio) raiz.setAttribute('data-au', '1');
   const p = raiz.style;
   const oscuro = d.oscuro === true;
 
@@ -268,9 +329,27 @@ function vestir(d){
 
   AU.iconos = iconosDe(d);
   fondo(d);
+}
+
+function vestir(d){
+  ponerTema(d, true);
   boton(d);
   clasificar();
   AU.puesto = true;
+  AU.modo = 'vestido';
+}
+
+/* El re-armado NO pone data-au: el sitio de abajo queda tal cual, asi
+   "Ver la original" muestra de verdad la original. */
+function rearmar(d, contenido){
+  ponerTema(d, false);
+  /* ya leido por quien pidio el re-armado: leerlo dos veces cuesta y
+     ademas puede dar distinto si el sitio se movio en el medio */
+  AU.contenido = contenido || AU.contenido || AU_LEER();
+  AU_ARMAR(AU.contenido, d, quitar);
+  AU.puesto = true;
+  AU.modo = 'rearmado';
+  return AU.contenido.medida;
 }
 
 /* el fondo va en el body: en un div encima tapa la barra */
@@ -296,6 +375,13 @@ function fondo(d){
   const capas = patron +
     'radial-gradient(900px 620px at 10% -6%,' + a + ',transparent 62%),' +
     'radial-gradient(760px 560px at 104% 106%,' + b + ',transparent 60%)';
+  /* las mismas capas, como variables, para que la pagina re-armada tenga
+     el mismo aire sin volver a calcular nada */
+  const rz = document.documentElement.style;
+  rz.setProperty('--au-vel1', a);
+  rz.setProperty('--au-vel2', b);
+  rz.setProperty('--au-patron', patron ? patron.replace(/,$/, '') : 'none');
+
   const e = document.body.style;
   e.setProperty('background-image', capas, 'important');
   e.setProperty('background-repeat', patron ? 'repeat,no-repeat,no-repeat' : 'no-repeat,no-repeat', 'important');
@@ -322,17 +408,52 @@ function boton(d){
 
 function quitar(){
   document.documentElement.removeAttribute('data-au');
+  AU_DESARMAR();
   ['au-boton','au-aviso','au-intro','au-medidor'].forEach(id => document.getElementById(id)?.remove());
   ['background-image','background-repeat','background-attachment','background-color']
     .forEach(k => document.body.style.removeProperty(k));
+  ['--au-vel1','--au-patron','--au-vel2']
+    .forEach(k => document.documentElement.style.removeProperty(k));
   document.querySelectorAll('.' + CLASES.join(',.')).forEach(e => e.classList.remove(...CLASES));
   if(AU.observador){ AU.observador.disconnect(); AU.observador = null; }
+  cortarRelecturas();
   AU.puesto = false;
-  chrome.storage.local.set({ activo:false });
+  AU.modo = null;
+  AU.asomado = false;
+  /* {activo:false} NO es "este sitio no tiene memoria": es el registro de que
+     la persona dijo QUITALO AQUI, y la llegada de un viaje tiene que
+     respetarlo. Va sin `guardado` adentro, asi que ocupa nada. */
+  guardarSitio({ activo:false });
+  /* si habia un viaje a medio salir, se cancela: quitar el diseño y que
+     igual aparezca en la pagina siguiente seria lo contrario de quitarlo */
+  chrome.storage.local.remove(LLAVE_VIAJE);
 }
 
 /* ============ 5. COLORES ============ */
-function nums(h){ const n = parseInt(String(h).replace('#',''),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+/* El color lo elige un modelo: puede venir de 3 digitos ("#abc"), sin
+   numeral, o no ser hex. Sin normalizar, "#abc" daba rgb(0,10,188) -otro
+   color- y "coral" daba negro, los dos sin un solo error. */
+function hex6(h){
+  let s = String(h == null ? '' : h).trim().replace(/^#/, '');
+  if(/^[0-9a-fA-F]{3}$/.test(s)) s = s[0]+s[0]+s[1]+s[1]+s[2]+s[2];
+  return /^[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : null;
+}
+function color(h, respaldo){ const s = hex6(h); return s ? '#' + s : respaldo; }
+function nums(h){
+  const s = hex6(h) || '5b6cff';
+  const n = parseInt(s, 16);
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
+
+/* todo diseño pasa por aqui antes de tocar la pagina */
+function sanear(d){
+  const s = Object.assign({}, d || {});
+  s.oscuro  = s.oscuro === true;
+  s.acento  = color(s.acento,  '#5b6cff');
+  s.acento2 = color(s.acento2, '#8b5cf6');
+  s.fondo   = color(s.fondo,   s.oscuro ? '#12141c' : '#f6f7fb');
+  return s;
+}
 
 /* Que color de texto va SOBRE un fondo dado. Los colores los elige un modelo,
    asi que no se puede clavar blanco: crema sobre terracota daba 2.9:1 y a 10px
@@ -461,14 +582,86 @@ function intro(tema){
   return fin;
 }
 
-/* ============ 7. PEDIRLE EL DISEÑO A LA CONEXION ============ */
-async function pedir(tema){
-  const cuerpo = JSON.stringify({ tema, estructura: estructura() });
-  const r = await fetch(AU.SERVIDOR + '/api/vestir', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body:cuerpo
-  });
-  if(!r.ok) throw new Error('la conexión no respondió');
-  return r.json();
+/* ============ 7. PEDIRLE EL DISEÑO A LA CONEXION ============
+   Con un tope propio: el fetch no trae timeout, asi que si el servidor se
+   cuelga la intro se queda tapando la pagina para siempre. */
+/* Medido: un re-armado de YouTube tardo 105.7 s y el tope estaba en 100, o
+   sea que el cliente cortaba una respuesta que el servidor iba a entregar y
+   caia al tema local sin que se notara el motivo. Desde que ademas de los
+   colores se le pide CSS, esto tarda mas. El tope del cliente va POR ENCIMA
+   del tope del servidor, para que gane el mensaje de error del servidor.
+
+   SUBIDO OTRA VEZ, y esta es la medicion: con un tema que le pide al modelo
+   ESCRIBIR una animacion propia (un vivero con polen y hojas girando), tres
+   candidatos tardaron 150.1s, 164.8s y uno se paso de los 170s del servidor
+   y lo mataron. Escribir un @keyframes cuesta tokens de salida, y el arcade
+   -que usa el Tetris ya hecho- salia en 96-104s. El tope viejo cortaba justo
+   los disenos mas trabajados. Ahora el servidor corta a los 200s y esto a
+   los 215s. Y desde que se piden N candidatos en paralelo, que uno se pase
+   ya no tumba el pedido: alcanza con que vuelva otro. */
+const TOPE = 215000;
+
+async function pedir(ruta, cuerpo){
+  const corte = new AbortController();
+  const reloj = setTimeout(() => corte.abort(), TOPE);
+  try {
+    const r = await fetch(AU.SERVIDOR + ruta, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(cuerpo), signal:corte.signal
+    });
+    if(!r.ok) throw new Error('la conexión no respondió');
+    return r.json();
+  } catch(e){
+    throw new Error(e.name === 'AbortError' ? 'la conexión tardó demasiado' : e.message);
+  } finally { clearTimeout(reloj); }
+}
+
+/* Lo que se le manda a la conexion para que analice la pagina: nombres y
+   titulos, no el texto entero. Con eso le alcanza para entender de que es,
+   y el pedido viaja chico. */
+function resumen(c){
+  return {
+    /* la clase va SIEMPRE: el prompt elige con ella que es lo protagonista
+       -la columna de lectura o la rejilla-. Se calcula en el extractor y se
+       perdia justo aca, asi que a YouTube y a Instagram se les seguia
+       pidiendo una columna de lectura que ahi no existe, y el bloque ENFOQUE
+       entero era codigo muerto sin dar un solo error. */
+    clase: c.clase,
+    /* Punto 1 y 2 del contrato. La MEDIDA -no una corazonada- dice si la
+       pagina dio poco de donde agarrarse, y eso viaja con el pedido: con
+       flaco:true el prompt le abre la mano al modelo para inventar. Se manda
+       tambien el POR QUE en numeros, porque una licencia sin motivo es una
+       bandera que nadie puede auditar despues. */
+    flaco: !!(c.medida && c.medida.flaco === true),
+    porQueFlaco: (c.medida && c.medida.porQueFlaco) || '',
+    sitio: c.sitio, titulo: c.titulo, lema: c.lema, marca: c.marca,
+    menu: c.menu.map(m => m.txt),
+    tarjetas: c.tarjetas.map(t => t.titulo),
+    titulos: c.bloques.filter(b => b.tipo === 'titulo').map(b => b.txt),
+    muestra: c.bloques.filter(b => b.tipo === 'parrafo').slice(0, 2)
+                      .map(b => b.txt.slice(0, 240))
+  };
+}
+
+/* El diseño de la conexion es un EXTRA, nunca un requisito: si no esta el
+   servidor, si Claude no responde o si tarda, el tema se arma aca mismo y
+   la demostracion no se cae. Mismo criterio que la pagina propia. */
+async function disenoDe(tema, titulo, c){
+  /* Vestir y re-armar no le preguntan lo mismo a la conexion:
+     - VESTIR manda el ESQUELETO (cajas y medidas). El contenido no hace
+       falta para elegir colores.
+     - RE-ARMAR manda el CONTENIDO, porque la pagina se vuelve a escribir:
+       ahi Claude si lee de que habla el sitio y decide como presentarlo. */
+  const ruta = c ? '/api/rearmar' : '/api/vestir';
+  const cuerpo = c ? { tema, contenido: resumen(c) }
+                   : { tema, estructura: estructura() };
+  try {
+    const res = await pedir(ruta, cuerpo);
+    return { d: sanear(res.diseno), fuente: 'conexión' };
+  } catch(e){
+    console.warn('[API UNIVERSAL] sin conexión (' + e.message + '), tema local');
+    return { d: sanear(AU_TEMA_LOCAL(tema, titulo)), fuente: 'local', motivo: e.message };
+  }
 }
 
 function aviso(txt, ms){
@@ -476,16 +669,141 @@ function aviso(txt, ms){
   if(!a){ a = document.createElement('div'); a.id = 'au-aviso'; document.body.appendChild(a); }
   a.textContent = txt;
   if(ms) setTimeout(() => a.remove(), ms);
+  return a;
+}
+
+/* ---------- cuando el diseño no lo hizo la conexion ----------
+   Esto se avisaba con un cartel de 6 segundos y se perdia: el servidor se
+   habia caido, el diseño salio del generador local -gris, Segoe UI- y la
+   persona creia que ASI diseñaba Claude. Un cartel que se va solo no sirve
+   para eso. Este se queda hasta que lo cierres, dice el motivo, y trae el
+   boton para volver a pedirlo cuando el servidor este de nuevo arriba. */
+function avisoLocal(motivo, tema, rearmando){
+  const a = aviso('');
+  a.textContent = '';
+  const t = document.createElement('div');
+  t.textContent = 'Este diseño lo armé yo, sin la conexión: ' + motivo + '.';
+  const p = document.createElement('div');
+  p.textContent = 'Levantá el servidor (INICIAR.bat) y volvé a pedirlo.';
+  p.style.cssText = 'font-weight:400;opacity:.75;margin-top:4px';
+  const fila = document.createElement('div');
+  fila.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+  const re = document.createElement('button');
+  re.textContent = 'Reintentar';
+  re.style.cssText = 'flex:1;padding:7px 10px;border:0;border-radius:8px;cursor:pointer;' +
+                     'background:#5b6cff;color:#fff;font:600 12px "Segoe UI",system-ui,sans-serif';
+  re.onclick = () => {
+    re.disabled = true;
+    re.textContent = 'Pidiendo…';
+    reintentar(tema, rearmando, a);
+  };
+  const no = document.createElement('button');
+  no.textContent = 'Así está bien';
+  no.style.cssText = 'padding:7px 10px;border:1px solid rgba(18,23,31,.18);border-radius:8px;' +
+                     'cursor:pointer;background:transparent;color:#5b6272;' +
+                     'font:600 12px "Segoe UI",system-ui,sans-serif';
+  no.onclick = () => a.remove();
+  fila.append(re, no);
+  a.append(t, p, fila);
+}
+
+function reintentar(tema, rearmando, cartel){
+  const leido = rearmando ? AU_LEER() : null;
+  disenoDe(tema, leido ? leido.titulo : tema, leido).then(({ d, fuente, motivo }) => {
+    if(fuente !== 'conexión'){
+      cartel.querySelector('button').disabled = false;
+      cartel.querySelector('button').textContent = 'Reintentar';
+      const p = cartel.children[1];
+      if(p) p.textContent = 'Sigue sin responder: ' + motivo + '.';
+      return;
+    }
+    cartel.remove();
+    AU.guardado = { tema, d };
+    guardarSitio({ activo:true, modo: rearmando ? 'rearmado' : 'vestido', guardado: AU.guardado });
+    if(rearmando) rearmar(d, leido); else vestir(d);
+  }).catch(() => {
+    cartel.querySelector('button').disabled = false;
+    cartel.querySelector('button').textContent = 'Reintentar';
+  });
+}
+
+/* ---------- volver a leer cuando el sitio termina de dibujar ----------
+   Al llegar a una pagina, el content script corre en document_idle y una
+   app todavia no dibujo nada: se re-armaba con lo poco que habia. Ahora que
+   los enlaces van en la MISMA pestaña, este es el camino normal, no el raro.
+
+   No es un temporizador fijo: se vuelve a leer varias veces y solo se
+   re-arma si de verdad hay MAS que antes. Si el sitio ya estaba completo,
+   la primera lectura gana y no se dibuja de nuevo. */
+function cuanto(m){
+  return (m.tarjetas || 0) * 3 + (m.parrafos || 0) + (m.imagenes || 0) + (m.medios || 0) * 4;
+}
+
+let _relecturas = null;
+function releerCuandoAsiente(){
+  cortarRelecturas();
+  const esperas = [700, 1800, 3600, 6000];
+  _relecturas = esperas.map(ms => setTimeout(() => {
+    if(!AU.puesto || AU.modo !== 'rearmado' || !AU.guardado) return;
+    /* asomados NO. Re-armar aca borra el host escondido y monta uno visible:
+       la capa vuelve a taparlo todo y callarElSitio pausa el video, a los
+       1.8 / 3.6 / 6 s, sin que la persona haya tocado nada. */
+    if(AU.asomado) return;
+    let nuevo;
+    try { nuevo = AU_LEER(); } catch(e){ return; }
+    const antes = AU.contenido ? cuanto(AU.contenido.medida) : -1;
+    if(cuanto(nuevo.medida) <= antes) return;
+    AU.contenido = nuevo;
+    AU_ARMAR(nuevo, AU.guardado.d, quitar);
+  }, ms));
+}
+function cortarRelecturas(){
+  if(_relecturas) _relecturas.forEach(clearTimeout);
+  _relecturas = null;
 }
 
 /* el sitio redibuja al navegar y se lleva lo nuestro: hay que reponerlo */
 function vigilar(){
   if(AU.observador) return;
   let t = null;
+  let direccion = location.href;
   AU.observador = new MutationObserver(() => {
     clearTimeout(t);
     t = setTimeout(() => {
       if(!AU.guardado || !AU.puesto) return;
+      /* asomados no se repone ni se re-arma nada: la persona esta mirando el
+         sitio de abajo a proposito. Si de paso el sitio navego solo, se
+         anota la direccion nueva y listo, para no re-armar despues por una
+         diferencia vieja. */
+      if(AU.asomado){ direccion = location.href; return; }
+      /* Una app cambia de pagina SIN recargar: en YouTube, tocar un video
+         cambia la direccion y el contenido, y el arranque no vuelve a
+         correr. Sin esto, la pagina armada se quedaba mostrando el video
+         anterior para siempre. */
+      if(location.href !== direccion){
+        direccion = location.href;
+        if(AU.modo === 'rearmado'){
+          AU.contenido = null;
+          try { rearmar(AU.guardado.d, AU_LEER()); } catch(e){}
+          releerCuandoAsiente();
+          return;
+        }
+      }
+      if(AU.modo === 'rearmado'){
+        /* nuestro contenedor cuelga de <html>, asi que el sitio no se lo
+           lleva por delante y no hay nada mas que reponer.
+           ACA HABIA UN CANDADO: se le ponia overflow:hidden !important al
+           <html> del sitio en CADA mutacion. Eso es justo lo que la regla 1
+           de rearmar.js prohibe -congela el documento de abajo y una lista
+           virtualizada deja de renderizar, asi que "Cargar mas" no puede
+           funcionar-, y ademas peleaba contra un vigilante del otro archivo
+           por una propiedad que tambien usa el sitio: le borrabamos su
+           candado al abrir un modal, o se lo re-aplicabamos al salir. El
+           scroll de nuestra pagina se contiene con overscroll-behavior en
+           .marco, que no le escribe nada al sitio. */
+        if(!document.getElementById('au-pagina')) AU_ARMAR(AU.contenido, AU.guardado.d, quitar);
+        return;
+      }
       if(!document.getElementById('au-boton')) vestir(AU.guardado.d);
       else clasificar();
     }, 400);
@@ -493,37 +811,324 @@ function vigilar(){
   AU.observador.observe(document.documentElement, { childList:true, subtree:true });
 }
 
+/* ============ 7b. LLEVAR EL DISEÑO AL OTRO LADO DEL ENLACE ============
+
+   LA MEMORIA SIGUE SIENDO POR SITIO, y eso no se toca: un tema puesto en
+   Instagram no puede aparecer solo en cualquier web que la persona abra
+   despues. Lo que faltaba es la otra mitad: cuando el clic sale de NUESTRA
+   pagina armada, la persona esta pidiendo seguir dentro del diseño, y el
+   destino arrancaba limpio porque su origen nunca tuvo nada guardado.
+
+   Asi que no se guarda "aplicalo en todos lados" -esa bandera global ya
+   existio y era justo el problema-, se guarda UN VIAJE: dura un minuto y se
+   consume al llegar. Si la persona tarda, o abre otra cosa, no queda nada.
+
+   EL ORDEN ES EL ARREGLO: chrome.storage.local.set es ASINCRONO. Si se
+   navega antes de que termine, esta pagina se muere con la escritura a
+   medias y el destino arranca sin diseño, que es el mismo sintoma que se
+   viene a curar. Se navega DENTRO del callback. */
+const LLAVE_VIAJE = 'viaje';
+const VIAJE_VIVE = 60000;   // un minuto: alcanza para cargar, no para olvidarse
+
+/* ---------- la memoria por sitio no se puede acumular para siempre ----------
+   Cada origen por el que se paso deja una entrada `sitio:<origen>` con el
+   diseño ENTERO adentro -incluido el css que escribe el modelo, que son
+   varios KB- y NADA la borraba nunca. El manifest no pide unlimitedStorage,
+   asi que eso corre contra la cuota de chrome.storage.local, y el dia que un
+   set falle el error se pierde. Se poda por fecha de ultimo uso.
+
+   La fecha va en su propia llave y no dentro de la entrada: chrome.storage no
+   sabe actualizar un campo suelto, asi que refrescarla adentro obligaria a
+   re-escribir el diseño completo en cada carga de cada pagina. */
+const LLAVE_VISTOS = 'vistos';
+const LLAVE_PODA = 'podado';
+const SITIO_VIVE = 30 * 24 * 60 * 60 * 1000;   // un mes sin volver: se olvida
+const UN_DIA = 24 * 60 * 60 * 1000;
+
+function marcarVisto(){
+  try {
+    chrome.storage.local.get([LLAVE_VISTOS], v => {
+      void chrome.runtime.lastError;
+      const m = Object.assign({}, (v && v[LLAVE_VISTOS]) || {});
+      m[location.origin] = Date.now();
+      chrome.storage.local.set({ [LLAVE_VISTOS]: m });
+    });
+  } catch(e){}
+}
+
+/* TODA escritura de la memoria del sitio pasa por aca: asi la fecha de ultimo
+   uso no depende de que alguien se acuerde de ponerla, y el error de cuota
+   deja de tragarse en silencio -antes el set ni callback tenia-. */
+function guardarSitio(reg){
+  try {
+    chrome.storage.local.set({ [LLAVE]: reg }, () => {
+      const e = chrome.runtime.lastError;
+      if(e) console.warn('[API UNIVERSAL] no pude guardar el diseño de este sitio: ' + e.message);
+    });
+  } catch(e){ return; }
+  marcarVisto();
+}
+
+function podar(){
+  try {
+    chrome.storage.local.get(null, todo => {
+      void chrome.runtime.lastError;
+      if(!todo) return;
+      const ahora = Date.now();
+      /* esto corre en CADA documento de CADA pestaña: una vez al dia basta */
+      if(todo[LLAVE_PODA] && ahora - todo[LLAVE_PODA] < UN_DIA) return;
+      const vistos = Object.assign({}, todo[LLAVE_VISTOS] || {});
+      const fuera = [];
+      Object.keys(todo).forEach(k => {
+        if(k.indexOf('sitio:') !== 0) return;
+        const origen = k.slice(6);
+        /* una entrada escrita antes de que existiera esta cuenta no se borra
+           de golpe: se le arranca el reloj ahora y se olvida sola si de
+           verdad nadie vuelve. Borrar por "no tiene fecha" seria tirarle el
+           diseño a alguien que lo esta usando hoy. */
+        if(!vistos[origen]){ vistos[origen] = ahora; return; }
+        if(ahora - vistos[origen] > SITIO_VIVE){ fuera.push(k); delete vistos[origen]; }
+      });
+      /* fechas de origenes que ya no tienen entrada: basura de la basura */
+      Object.keys(vistos).forEach(o => {
+        if(!todo['sitio:' + o] && ahora - vistos[o] > SITIO_VIVE) delete vistos[o];
+      });
+      chrome.storage.local.set({ [LLAVE_PODA]: ahora, [LLAVE_VISTOS]: vistos });
+      if(fuera.length) chrome.storage.local.remove(fuera);
+    });
+  } catch(e){}
+}
+
+/* EL ESTILO VIAJA; EL TEXTO NO.
+   La conexion devuelve dos cosas mezcladas en el mismo objeto: como se ve la
+   pagina (colores, tipografias, CSS) y que dice (el titulo, el lema, y en una
+   pagina flaca sus secciones y tarjetas escritas). Lo segundo habla del sitio
+   de donde salio el clic. Pegado en OTRO sitio deja de ser una propuesta
+   sobre una pagina vacia y pasa a ser una afirmacion falsa sobre una pagina
+   real: el titular inventado de un blog encabezando un diario.
+
+   Asi que se copian SOLO los campos de estilo, que son los que lee
+   ponerTema() aca al lado, mas el CSS. SI PONERTEMA EMPIEZA A LEER UN CAMPO
+   NUEVO, TIENE QUE ENTRAR EN ESTA LISTA: si se olvida, ese campo no cruza y
+   el destino queda un poco menos vestido, que es el lado barato del error. */
+const SOLO_ESTILO = ['acento', 'acento2', 'fondo', 'oscuro', 'radio', 'fuente_tit',
+                     'fuente_txt', 'mayus', 'duro', 'iconos', 'css', 'local'];
+function estiloSolo(d){
+  const s = {};
+  SOLO_ESTILO.forEach(k => { if(d[k] !== undefined) s[k] = d[k]; });
+  return s;
+}
+
+function AU_LLEVAR(href){
+  /* el destino se valida aca tambien: este es el unico punto del programa
+     que escribe location.href, y un "javascript:" leido del sitio no puede
+     entrar por aca ni aunque el enlace se haya armado mal */
+  let destino = '', hacia = '';
+  try {
+    const u = new URL(String(href == null ? '' : href), location.href);
+    if(u.protocol === 'http:' || u.protocol === 'https:'){ destino = u.href; hacia = u.origin; }
+  } catch(e){}
+  if(!destino) return;
+
+  let ido = false;
+  const irse = () => { if(ido) return; ido = true; location.href = destino; };
+
+  /* sin diseño puesto no hay nada que llevar: el enlace es un enlace normal */
+  if(!AU.puesto || !AU.guardado || !AU.guardado.d){ irse(); return; }
+
+  const viaje = {
+    hasta: Date.now() + VIAJE_VIVE,
+    /* A DONDE IBA, que es lo que faltaba y por eso esto era peligroso.
+       chrome.storage.local es GLOBAL a todas las pestañas: sin destino, el
+       viaje se lo quedaba el primer documento que terminara de cargar en
+       cualquier lado dentro del minuto. Se pulsaba un enlace a un .pdf -que
+       ni siquiera ejecuta este script-, cuarenta segundos despues la persona
+       abria su banco a mano y el banco salia vestido con el tema de
+       Instagram, y guardado ahi PARA SIEMPRE. Es exactamente lo que la
+       memoria por sitio existe para que no pase. */
+    a: hacia,
+    /* DE DONDE SALIO, que es lo que deja pasar a un redirector. l.instagram
+       .com y t.co contestan 302, asi que ahi no carga ningun documento y el
+       que si carga es el del destino final, cuyo origen NO es el que quedo
+       escrito en `a`. Lo que sobrevive al 302 es el Referer, y apunta a la
+       pagina donde se hizo el clic. Si el sitio manda no-referrer no llega
+       nada y el viaje no se aplica, que es el lado barato del error. */
+    desde: location.origin,
+    modo: AU.modo || 'rearmado',
+    /* el tema si viaja: es lo que la persona PIDIO ("de barro antiguo"), no
+       algo que este sitio dijo de si mismo */
+    guardado: { tema: AU.guardado.tema, d: estiloSolo(AU.guardado.d) }
+  };
+  try {
+    chrome.storage.local.set({ [LLAVE_VIAJE]: viaje }, () => {
+      /* se lee lastError para no dejar el error suelto en la consola; se
+         navega igual: quedarse sin diseño es mucho menos malo que no ir a
+         donde llevaba el enlace */
+      void chrome.runtime.lastError;
+      irse();
+    });
+  } catch(e){ irse(); }
+  /* Respaldo para UN solo caso: que el callback no llegue NUNCA porque la
+     extension se recargo entre la llamada y la respuesta (con el contexto ya
+     invalidado, el set de arriba tira y lo agarra el catch). Estaba en 900 ms
+     y corria siempre, asi que un perfil con el almacenamiento cargado podia
+     navegar con la escritura en vuelo, que es el sintoma que esto viene a
+     curar. Tres segundos: el callback normal llega en milisegundos, y si de
+     verdad no va a llegar, tres segundos es lo que cuesta no perder el clic. */
+  setTimeout(irse, 3000);
+}
+
+/* ---------- ¿este viaje es para MI? ----------
+   Las dos maneras de que si dicen algo del destino. Ninguna es "fui el
+   primero en cargar", que era la de antes. */
+function origenDe(u){ try { return new URL(String(u || '')).origin; } catch(e){ return ''; } }
+function viajeMio(t){
+  if(!t || typeof t !== 'object') return false;
+  if(t.a && t.a === location.origin) return true;
+  /* el rodeo del redirector: me mando la misma pagina que escribio el viaje */
+  return !!t.desde && t.desde !== location.origin &&
+         origenDe(document.referrer) === t.desde;
+}
+
+/* ---------- tomarlo sin que dos lo tomen ----------
+   get y remove son dos operaciones asincronas y entre las dos no habia
+   cerrojo: dos documentos que estuvieran ahi al mismo tiempo se llevaban los
+   dos el MISMO viaje, los dos lo borraban y los dos se guardaban el diseño
+   para siempre. Se marca primero quien lo toma y se vuelve a leer: la cola de
+   chrome.storage serializa las escrituras, asi que el ultimo en escribir es
+   el unico que se encuentra a si mismo en la relectura. */
+const YO = Math.random().toString(36).slice(2) + Date.now().toString(36);
+function tomarViaje(t, alGanar){
+  chrome.storage.local.set({ [LLAVE_VIAJE]: Object.assign({}, t, { tomadoPor: YO }) }, () => {
+    void chrome.runtime.lastError;
+    chrome.storage.local.get([LLAVE_VIAJE], v2 => {
+      void chrome.runtime.lastError;
+      const t2 = v2 && v2[LLAVE_VIAJE];
+      if(!t2 || t2.tomadoPor !== YO) return;      // gano otro documento
+      chrome.storage.local.remove(LLAVE_VIAJE);
+      alGanar();
+    });
+  });
+}
+
 /* ============ 8. ORDENES DEL POPUP ============ */
 chrome.runtime.onMessage.addListener((msg, _o, responder) => {
   if(msg.tipo === 'estado'){
-    responder({ puesto: AU.puesto, tema: AU.guardado?.tema || '' });
+    responder({ puesto: AU.puesto, modo: AU.modo, tema: AU.guardado?.tema || '',
+                sugerido: sugerirTema() });
     return true;
   }
   if(msg.tipo === 'quitar'){ quitar(); responder({ ok:true }); return true; }
-  if(msg.tipo === 'vestir'){
-    const pantalla = intro(msg.tema);
-    pedir(msg.tema).then(res => {
-      const d = res.diseno;
-      AU.guardado = { tema:msg.tema, d };
-      chrome.storage.local.set({ activo:true, guardado:AU.guardado });
+
+  if(msg.tipo === 'vestir' || msg.tipo === 'rearmar'){
+    const rearmando = msg.tipo === 'rearmar';
+    /* En re-armado el tema puede salir de la propia pagina: no hace falta
+       que la persona escriba nada para que funcione. */
+    let tema = (msg.tema || '').trim();
+    let titulo = tema;
+    let leido = null;
+    if(rearmando){
+      leido = AU_LEER();
+      titulo = leido.titulo;
+      if(!tema) tema = AU_TEMA(leido);
+    }
+    const pantalla = intro(titulo || tema);
+
+    disenoDe(tema, titulo, leido).then(({ d, fuente, motivo }) => {
+      /* PARA QUE PAGINA SE ESCRIBIO ESTO. El diseño se guarda bajo
+         sitio:<origen> y se vuelve a aplicar en CUALQUIER pagina de ese
+         origen, pero la bienvenida, el aviso y las secciones y tarjetas
+         escritas se escribieron mirando UNA pagina. Es el mismo argumento que
+         ya esta escrito arriba para el salto entre sitios: pegadas en otra
+         pagina real dejan de ser una propuesta y pasan a ser una afirmacion
+         falsa. El armador compara esto con la direccion de ahora.
+         No entra en SOLO_ESTILO a proposito: al otro sitio ya no cruza. */
+      if(rearmando && d) d.para = location.href;
+      AU.guardado = { tema, d };
+      AU.contenido = leido;
+      AU.asomado = false;
+      guardarSitio({ activo:true, modo:msg.tipo === 'rearmar' ? 'rearmado' : 'vestido',
+                     guardado:AU.guardado });
       pantalla.listo(d);
-      setTimeout(() => { vestir(d); vigilar(); }, 900);
-      responder({ ok:true, titulo:d.titulo });
+      setTimeout(() => {
+        /* de re-armado a vestido hay que DESARMAR primero: si no, #au-pagina
+           se queda colgado de <html> tapando la pagina que se acaba de
+           vestir, y con el los ganchos que dejo AU_ARMAR -el que pausa todo
+           video que arranque en el sitio-. Se veia asi: en YouTube, tras
+           "Solo cambiarle el diseño", ningun video volvia a reproducirse. */
+        if(!rearmando && AU.modo === 'rearmado') AU_DESARMAR();
+        if(rearmando){ rearmar(d, leido); releerCuandoAsiente(); } else vestir(d);
+        vigilar();
+        if(fuente === 'local') avisoLocal(motivo, tema, rearmando);
+      }, 900);
+      responder({ ok:true, titulo:d.titulo, fuente,
+                  medida: leido ? leido.medida : null });
     }).catch(e => {
       pantalla.fallo(e.message);
-      aviso('No pude hablar con la conexión: ' + e.message +
-            '. ¿Está corriendo el servidor?', 8000);
+      aviso('No pude armar la página: ' + e.message, 8000);
       responder({ ok:false, error:e.message });
     });
     return true;
   }
 });
 
+/* lo que la pagina dice ser, para que el popup lo ofrezca ya escrito */
+function sugerirTema(){
+  try { return AU_TEMA(AU_LEER()).slice(0, 90); } catch(e){ return ''; }
+}
+
 /* ============ 9. AL ABRIR LA PAGINA ============ */
-chrome.storage.local.get(['activo','guardado'], v => {
-  if(v.activo && v.guardado && v.guardado.d){
-    AU.guardado = v.guardado;
-    vestir(v.guardado.d);
-    vigilar();
-  }
+function arrancar(g){
+  AU.guardado = g.guardado;
+  AU.asomado = false;
+  if(g.modo === 'rearmado'){ rearmar(g.guardado.d); releerCuandoAsiente(); }
+  else { vestir(g.guardado.d); }
+  vigilar();
+}
+
+/* La limpieza corre en CUALQUIER documento, no solo en los HTML. El viaje se
+   consumia unicamente dentro del if de text/html, asi que un .pdf, un .zip
+   con Content-Disposition, una URL que contesta 204 o una navegacion que la
+   persona cancela lo dejaban vivo, con su minuto corriendo y con el css
+   entero del modelo adentro, esperando a la proxima pagina cualquiera. */
+podar();
+
+chrome.storage.local.get([LLAVE, LLAVE_VIAJE], v => {
+  void chrome.runtime.lastError;
+  const t = v[LLAVE_VIAJE];
+  /* vencido: se barre aca, se lo cruce el documento que se lo cruce */
+  if(t && !(Date.now() < t.hasta)) chrome.storage.local.remove(LLAVE_VIAJE);
+
+  /* Solo en documentos HTML: con la extension corriendo en cualquier URL,
+     esto tambien se ejecuta sobre un XML o un texto plano servido por el
+     sitio, y ahi no hay pagina que vestir. */
+  if(document.contentType !== 'text/html') return;
+
+  const g = v[LLAVE];
+  if(g && g.activo && g.guardado && g.guardado.d){ marcarVisto(); arrancar(g); return; }
+
+  /* UN "NO" EXPLICITO NO LO PISA UN VIAJE. quitar() escribe {activo:false},
+     que es como queda registrado que la persona dijo QUITALO AQUI, y esto
+     caia igual al bloque de abajo: el sitio del que se acababa de quitar el
+     diseño volvia a salir vestido apenas llegaba un viaje. Se consume igual
+     si venia para aca, para que no siga suelto. */
+  const dijoQueNo = !!(g && g.activo === false);
+
+  /* Este origen no tiene nada suyo, pero puede que hayamos llegado siguiendo
+     un enlace de nuestra propia pagina: ver 7b. */
+  if(!t || !(Date.now() < t.hasta)) return;      // vencido, o sin fecha
+  /* NO ERA PARA ACA: ni se toca. Consumirlo seria robarselo al destino de
+     verdad, que puede estar cargando en otra pestaña ahora mismo. */
+  if(!viajeMio(t)) return;
+  if(!t.guardado || !t.guardado.d){ chrome.storage.local.remove(LLAVE_VIAJE); return; }
+
+  tomarViaje(t, () => {
+    if(dijoQueNo) return;
+    const llegado = { activo:true, modo:t.modo, guardado:t.guardado };
+    /* se guarda YA para este origen, ANTES de dibujar: el viaje acaba de
+       borrarse, asi que si no se guardara aca una simple recarga -o el
+       propio sitio navegando solo- dejaria la pagina pelada otra vez */
+    guardarSitio(llegado);
+    arrancar(llegado);
+  });
 });

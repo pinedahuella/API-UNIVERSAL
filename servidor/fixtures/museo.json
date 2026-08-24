@@ -1,0 +1,18 @@
+{
+  "tema": "ficha de museo",
+  "contenido": {
+    "clase": "app",
+    "flaco": true,
+    "porQueFlaco": "1 tarjeta, 1 imagen, 2 videos que no se pueden mostrar aqui, 1 titulo y 34 palabras",
+    "sitio": "instagram.com",
+    "titulo": "Instagram",
+    "lema": "",
+    "marca": "Instagram",
+    "menu": ["Inicio", "Buscar", "Explorar", "Reels", "Mensajes", "Perfil"],
+    "tarjetas": ["telaresdesololá"],
+    "titulos": ["Sugerencias para ti"],
+    "muestra": [
+      "Cada faja lleva dos semanas de telar de cintura. Los hilos los tenimos con cascara de aliso y el rojo sale de la cochinilla, igual que hace cien anos."
+    ]
+  }
+}

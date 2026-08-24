@@ -1,0 +1,6 @@
+# Lo de aca adentro lo re-escribe banco_disenos.js en CADA corrida: es la
+# hoja que devolvio el modelo, guardada para mirarla con los ojos. No es
+# fuente, y versionarla llenaria cada commit de un CSS distinto que nadie
+# escribio. La carpeta si tiene que existir, por eso este archivo se queda.
+*.css
+!.gitignore

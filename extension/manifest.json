@@ -1,16 +1,15 @@
 {
   "manifest_version": 3,
   "name": "API UNIVERSAL",
-  "version": "1.0",
-  "description": "Viste cualquier pagina que ya existe con el diseno que arma API UNIVERSAL.",
+  "version": "2.0",
+  "description": "Lee cualquier pagina y la vuelve a armar con el diseno que hace la conexion. El sitio original no se toca.",
   "permissions": [
     "storage",
     "activeTab",
     "scripting"
   ],
   "host_permissions": [
-    "https://www.instagram.com/*",
-    "http://localhost:4321/*"
+    "<all_urls>"
   ],
   "action": {
     "default_title": "API UNIVERSAL",
@@ -25,16 +24,35 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.instagram.com/*"
+        "http://*/*",
+        "https://*/*"
       ],
       "css": [
         "vestido.css"
       ],
       "js": [
         "iconos.js",
+        "extractor.js",
+        "rearmar.js",
         "contenido.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "pagina.css",
+        "fuentes/press-start-2p.woff2",
+        "fuentes/silkscreen.woff2",
+        "fuentes/vt323.woff2",
+        "fuentes/bungee.woff2"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
     }
   ],
   "icons": {

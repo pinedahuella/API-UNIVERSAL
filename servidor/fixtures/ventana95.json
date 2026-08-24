@@ -1,0 +1,22 @@
+{
+  "tema": "Windows 95",
+  "contenido": {
+    "clase": "app",
+    "flaco": false,
+    "porQueFlaco": "",
+    "sitio": "app.todoist.com",
+    "titulo": "Hoy",
+    "lema": "",
+    "marca": "Todoist",
+    "menu": ["Bandeja", "Hoy", "Proximo", "Filtros y etiquetas", "Completadas"],
+    "tarjetas": [
+      "Entregar el avance de Emprendimiento",
+      "Comprar cable USB-C para la placa",
+      "Llamar al taller por el retrovisor",
+      "Revisar las notas del bimestre",
+      "Renovar el dominio ledkid.com"
+    ],
+    "titulos": ["Hoy", "Vencidas", "Manana"],
+    "muestra": []
+  }
+}

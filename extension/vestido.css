@@ -266,9 +266,11 @@ html[data-au] div.au-flotante.au-flotante{
 }
 
 /* ================= LO NUESTRO ================= */
-html[data-au] /* ================= EL BOTON FLOTANTE =================
+/* ================= EL BOTON FLOTANTE =================
    Lo unico nuestro que se queda en la pagina. Cerrado es un circulo del tamaño
-   de un icono; al pasar el mouse se abre y dice "Quitar". */
+   de un icono; al pasar el mouse se abre y dice "Quitar".
+   OJO: el comentario estaba DENTRO del selector, asi que la regla era
+   "html[data-au] #au-boton" por accidente. */
 #au-boton{
   position:fixed; left:16px; bottom:16px; z-index:2147483000;
   display:flex; align-items:center; gap:0;
@@ -306,6 +308,21 @@ html[data-au] #au-aviso, html[data-au] #au-aviso *{color:#12171f !important}
   box-shadow:0 12px 34px rgba(0,0,0,.22);
   isolation:isolate;
 }
+
+/* ================= LA BARRA QUE NO LLEVA A NINGUN LADO =================
+   Con la pagina re-armada encima, el documento del sitio sigue siendo alto
+   y scrolleable -y tiene que seguir siendolo, si no una lista virtualizada
+   deja de dibujar y "Cargar mas" no puede funcionar-. Pero eso deja DOS
+   barras de scroll: la de nuestra pagina y la del navegador. Agarrando la
+   de afuera se scrollea un documento que esta tapado: la barra se mueve y
+   en pantalla no cambia nada. Medido en instagram.com: documento de 3391px
+   con una ventana de 486px.
+
+   Se esconde la barra, no el scroll: overflow:hidden congelaria el sitio.
+   Esto es lo unico que se le escribe al <html> del sitio, es un atributo
+   nuestro, y se va al quitar. */
+html[data-au-armado]{scrollbar-width:none}
+html[data-au-armado]::-webkit-scrollbar{width:0; height:0}
 
 /* ================= LA INTRO ================= */
 #au-intro{

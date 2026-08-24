@@ -1,0 +1,1163 @@
+/* La pagina RE-ARMADA de API UNIVERSAL.
+
+   Vive dentro de un shadow root, asi que el CSS del sitio no llega hasta
+   aca y no hace falta un solo !important para defenderse. Lo unico que
+   cruza la frontera son las variables --au-*, que es el tema.
+
+   ESTA HOJA ES EL PISO, NO EL TECHO. Encima se adopta una segunda hoja que
+   escribe la conexion, y esa manda. Por eso aca no hay un solo !important
+   (habria que pelearlo desde arriba), los selectores son de una sola clase
+   (faciles de pisar) y ningun valor decorativo se declara por encima de la
+   especificidad de su pieza: el que lo necesita cuelga de una perilla con
+   valor por defecto. Si la conexion no escribe nada, esto solo ya se ve bien.
+
+   OJO CON COMO SE LEE ESO: un `.menu a{font-size:13px}` a numero pelado NO
+   es un defecto, y hay varios a proposito. La perilla no es la meta, es el
+   rodeo: hace falta solo cuando una VARIANTE (.hero.compacta, .tarjeta.grande)
+   querria fijar esa propiedad, porque ahi la variante gana por especificidad
+   y el modelo no puede nombrarla. Sin variante de por medio, el numero pelado
+   en la pieza ya es pisable y una perilla no agrega nada.
+
+   Los valores de :host son el respaldo: si por lo que sea el tema no llego,
+   la pagina igual se ve intencional y no rota. */
+
+/* ========== LA VARIANTE MUEVE LA PERILLA, LA PIEZA DECLARA ==========
+
+   ESA PROMESA DE ARRIBA ERA MENTIRA, Y LA MENTIRA ERA MUDA.
+   Medido en el navegador: la conexion escribio .seccion{font-size:14px} y en
+   pantalla salieron 27px, porque aca abajo vivia .cuerpo > h2.seccion, que
+   vale (0,2,1) contra los (0,1,0) del modelo. El modelo pide una cosa, sale
+   otra, y no hay forma de que se entere: no es un error, es especificidad. En
+   la respuesta tibia que disparo todo esto el .hero h1 quedo en 16px -MAS
+   CHICO que su propio .seccion, que media 27px- por este mismo mecanismo.
+
+   LA AUDITORIA: 14 trampas, no 3. Se recorrieron las 34 piezas del prompt
+   contra toda la hoja, calculando la especificidad de verdad y mirando 13
+   propiedades (font-size, font-family, font-weight, color, background,
+   background-color, border, border-radius, box-shadow, text-transform,
+   letter-spacing, padding, margin). Estan listadas mas abajo.
+
+   LA CURA, Y POR QUE NO ES :where().
+   La salida obvia era envolver el qualifier en :where(), que selecciona igual
+   y suma cero especificidad. Funciona, y queda como la alternativa legitima si
+   algun dia hace falta. No se eligio por UNA razon, no por dos: deja el arreglo
+   colgando de una sutileza que hay que ver para creer -dos reglas identicas a
+   la vista, una ganando y la otra no-, y en una hoja que otro va a editar eso
+   se pierde en la primera edicion distraida.
+
+   AQUI DECIA UNA SEGUNDA RAZON Y ERA FALSA. Decia que
+   servidor/verificar_contrato.js cuenta lo de adentro de :where() y que por eso
+   leia las reglas ya curadas como trampas. Medido hoy contra el archivo que
+   corre: tiene una funcion sinWhere() que lo saca entero antes de medir, y con
+   `.hero:where(.compacta) h1{font-size:10px}` agregado a mano el verificador
+   sale "TODO EN REGLA". No hay falso positivo que avisar a nadie: quien lea
+   esto y vaya a "arreglar" ese archivo va a romper algo que esta bien.
+
+   Lo que se hizo, entonces, es esto: LA VARIANTE MUEVE UNA PERILLA Y LA PIEZA
+   DECLARA. La variante deja de declarar la propiedad y pasa a mover una
+   perilla; la propiedad la declara la pieza, en la especificidad exacta que el
+   prompt le nombra al modelo.
+
+     antes   .hero.compacta h1{font-size:clamp(28px,3.4vw,42px)}   (0,2,1)
+             .hero h1{font-size:clamp(34px,5.4vw,62px)}            (0,1,1)
+
+     ahora   .hero.compacta{--hero-h1-tam:clamp(28px,3.4vw,42px)}  (0,2,1)
+             .hero h1{font-size:var(--hero-h1-tam, clamp(34px,...))} (0,1,1)
+
+   La variante SIGUE valiendo (0,2,1), y ahora esta bien que asi sea: lo que
+   pisa es una perilla nuestra, no una propiedad del modelo. Y cuando el modelo
+   escribe .hero h1{font-size:14px} no le gana a la variante -no se cruzan-:
+   BORRA la declaracion que leia la perilla, y con ella la variante entera. Sin
+   pelea de especificidad, y sin poder salir mal.
+
+   Gana tres cosas mas: la variante se lee como lo que es (una lista de
+   diferencias), el conflicto lo resuelven las variables donde antes lo
+   resolvia el orden del archivo -por eso el @media de abajo tampoco necesita
+   repetir nada-, y el modelo puede mover la perilla en vez de la propiedad si
+   quiere conservar el clamp responsive.
+
+   SI AGREGAS UNA REGLA CON DOS CLASES, LEE ESTO. El defecto se repite solo: se
+   escribe .tarjeta.grande{font-size:...} porque "es la variante", y se acaba de
+   robar una propiedad del modelo sin que nada avise. La pregunta antes de
+   escribirla es una sola: ¿la pieza que estoy vistiendo esta en la lista de 34
+   del prompt? Si esta, la variante escribe --perilla y la pieza declara.
+
+   Y NO TE FIES DEL VERDE DE verificar_contrato.js PARA ESTO. Revisa de verdad,
+   pero no lo que dice la cabecera de arriba: mira 9 propiedades, no 13 -le
+   faltan font-weight, letter-spacing, padding y margin- y solo por su nombre
+   exacto, asi que padding-top o border-color tampoco cuentan. Medido hoy,
+   agregando cada trampa a mano a esta hoja y corriendo el verificador:
+     .hero.compacta h1{font-size:10px}          -> FALLA (bien)
+     .hero.compacta{padding:1px}                -> TODO EN REGLA
+     .hero.compacta .lema{margin:1px}           -> TODO EN REGLA
+     .hero.compacta h1{font-weight:900}         -> TODO EN REGLA
+     .cuerpo > h2.seccion{font-size:27px}       -> TODO EN REGLA
+   La ultima es la peor: es LA trampa que se midio en el navegador, la que
+   disparo todo esto. Su leAplica() descarta cualquier regla cuyo ultimo
+   compuesto tenga etiqueta cuando la pieza no la tiene, y 26 de las 34 piezas
+   no la tienen: `h2.seccion` no se compara con `.seccion` nunca.
+
+   El numero completo, reintroduciendo las 14 de la lista de abajo una por una
+   y corriendo el verificador cada vez: caza 6 y se le escapan 8. Y de esas 6,
+   la de `.cuerpo > h3.seccion` la caza por equivocacion -dice que choca con
+   `.tarjeta-txt h3`, que es imposible: mira solo el ultimo compuesto y da los
+   antepasados por buenos-. Cazadas por la razon correcta: 5 de 14.
+   O sea que 9 de las 14 no las ve NADIE si vuelven. La unica red que hay para
+   ellas es esta hoja y la pregunta del parrafo de arriba.
+
+   LAS 14 TRAMPAS QUE HABIA. La columna es la especificidad de la base contra
+   la del selector que el prompt le ofrece al modelo:
+
+     (0,3,0 vs 0,1,0) .marco.oscuro .cab               background-color
+     (0,3,0 vs 0,1,0) .hero.sin-foto .lema             margin
+     (0,2,0 vs 0,1,0) .hero.compacta                   padding
+     (0,2,1 vs 0,1,1) .hero.compacta h1                font-size
+     (0,3,0 vs 0,1,0) .hero.compacta .lema             margin, font-size
+     (0,2,0 vs 0,1,0) .hero .medio                     margin
+     (0,3,0 vs 0,1,0) .hero.con-video .lema            margin
+     (0,2,0 vs 0,1,0) .seccion.suelta                  margin, padding
+     (0,2,0 vs 0,1,0) .tarjetas.grande                 padding
+     (0,3,1 vs 0,1,1) .tarjeta.grande .tarjeta-txt h3  font-size
+     (0,2,1 vs 0,1,0) .cuerpo > h2.seccion             font-size, font-weight, margin
+     (0,2,1 vs 0,1,0) .cuerpo > h3.seccion             font-size, font-weight, margin
+     (0,3,0 vs 0,1,0) .cuerpo > .seccion:first-child   margin
+     (0,2,1 vs 0,1,1) .cuerpo.segundo p                font-size
+
+   Las 14 quedaron igual: el selector NO se toco -asi no cambia a que elementos
+   le cae, que es donde se rompe el diseño por defecto- y lo que cambio es lo
+   que declara. Las perillas que aparecieron son --cab-fondo (ya existia),
+   --hero-arriba, --hero-abajo, --hero-h1-tam, --lema-arriba, --lema-lados,
+   --lema-tam, --medio-arriba, --seccion-tam, --seccion-peso, --seccion-arriba,
+   --seccion-lados, --seccion-px, --seccion-ancho, --tarjetas-arriba,
+   --tarjeta-h3-tam, --tarjeta-h3-alto, --cuerpo-p-tam y --cuerpo-p-alto.
+
+   LO QUE SE DEJO ESPECIFICO A PROPOSITO, Y POR QUE:
+
+     los :hover y los :disabled (.menu a:hover, .volver:hover, .mas:hover,
+       .bt:hover, .flojo:hover, .medio-enlace:hover, a.tarjeta:hover,
+       .miniatura:hover img y .miniatura:hover .play). Un hover es un ESTADO,
+       no una segunda opinion sobre como se ve la pieza quieta. Si se bajaran,
+       el modelo escribiendo solo .menu a{color:X} -que es lo normal- borraria
+       de paso todo el hover de la pagina y no quedaria ni un aviso de que algo
+       es pulsable. El modelo que quiera el suyo escribe .menu a:hover y empata
+       en especificidad, asi que igual gana: no se le cierra ninguna puerta.
+
+       CON UNA EXCEPCION MEDIDA, Y NO ESTA ARREGLADA: `a.tarjeta:hover` vale
+       (0,2,1) por la etiqueta `a`, y el `.tarjeta:hover` que el modelo SI
+       puede escribir vale (0,2,0). Ahi no empata: pierde, y pierde el
+       border-color. Y es justo donde mas duele, porque el prompt le pide en
+       'catalogo' y en 'app' -textual- "el borde, que pasa al pasar el mouse
+       encima (:hover)". Ver la nota que esta sobre la regla, alla abajo.
+
+     .hero.compacta .hero-img{display:none}. display no esta entre las 13
+       propiedades del modelo, y esconder la foto en una rejilla es estructura:
+       si el modelo escribiera .hero-img{display:grid} para vestirla, la
+       re-encenderia justo donde no cabe.
+
+     las reglas sobre hijos que el prompt NO le ofrece al modelo (.vacio h2,
+       .vacio p, .foto figcaption, .tarjeta-txt p, .cuerpo ul, .play svg,
+       .hero-img img, .video iframe, .tarjeta.grande .tarjeta-txt). No hay
+       colision posible: el modelo apunta al padre, estas apuntan al hijo.
+
+     las que solo fijan layout que el modelo no reclama (.hero.sin-foto y
+       .hero.con-video con grid-template-columns / max-width / text-align,
+       .cuerpo.segundo, .hero .medio-enlace{align-self}, y
+       .tarjeta.grande .tarjeta-img img{aspect-ratio}).
+
+   Y EL DEFECTO ESPEJO, QUE ES OTRO BUG Y NO SE TOCO AQUI: .sonando y .agotado
+   valen (0,1,0), lo mismo que .tarjeta y .mas, y viven en esta hoja, o sea
+   ANTES. Un .tarjeta{box-shadow:none} del modelo apaga sin querer la marca de
+   "esta es la que esta sonando". Subirles la especificidad seria escribir la
+   trampa numero 15; lo que corresponde es el camino que ya usa la firma
+   (GUARDA_FIRMA en rearmar.js), y eso no vive en esta hoja. */
+
+/* OJO CON ESTO: si aca se declara --au-acento con un valor, ese valor GANA
+   sobre el que hereda del documento y el tema no llega nunca. Por eso cada
+   variable se re-declara con nombre propio y el respaldo va DENTRO del var():
+   si el tema llego, manda el tema; si no, manda el respaldo. */
+:host{
+  --acento:  var(--au-acento,  #5b6cff);
+  --acento2: var(--au-acento2, #8b5cf6);
+  --fondo:   var(--au-fondo,   #f4f6fb);
+  --papel:   var(--au-papel,   #ffffff);
+  --tinta:   var(--au-tinta,   #12171f);
+  --tinta2:  var(--au-tinta2,  #5b6272);
+  --linea:   var(--au-linea,   #e2e5ee);
+  --radio:   var(--au-radio,   14px);
+  --borde:   var(--au-borde,   1px);
+  --sombra:  var(--au-sombra,  0 6px 20px rgba(0,0,0,.10));
+  --tit:     var(--au-tit,     "Segoe UI", system-ui, sans-serif);
+  --txt:     var(--au-txt,     "Segoe UI", system-ui, sans-serif);
+  --tt:      var(--au-tt,      none);
+  --ls:      var(--au-ls,      normal);
+  --sobre:   var(--au-sobre-acento, #ffffff);
+  --suave:   var(--au-acento-suave, transparent);
+  --vel1:    var(--au-vel1,    transparent);
+  --vel2:    var(--au-vel2,    transparent);
+  --patron:  var(--au-patron,  none);
+
+  /* ---- TEXTURAS ----
+     Todas son data URI o degradados: no bajan nada de la red, asi que
+     andan aunque el sitio tenga la CSP cerrada y aunque no haya internet.
+     Se usan asi:   --velo: var(--tex-grano);  --velo-op: .5;   */
+  --tex-grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --tex-papel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035 0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23p)'/%3E%3C/svg%3E");
+  --tex-barro: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='6'/%3E%3CfeDiffuseLighting lighting-color='%23ffffff' surfaceScale='2'%3E%3CfeDistantLight azimuth='45' elevation='58'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23b)'/%3E%3C/svg%3E");
+  --tex-lino: repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 1px, transparent 1px 5px),
+              repeating-linear-gradient(-45deg, rgba(0,0,0,.05) 0 1px, transparent 1px 5px);
+  --tex-rayas: repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 9px, transparent 9px 18px);
+  --tex-cuadricula: linear-gradient(rgba(0,0,0,.07) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0,0,0,.07) 1px, transparent 1px);
+  --tex-puntos: radial-gradient(rgba(0,0,0,.14) 1.1px, transparent 1.2px);
+  --tex-scan: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+
+  /* ---- PERILLAS QUE LA CONEXION PUEDE MOVER ---- */
+  --velo: none;
+  --velo-tam: auto;
+  --velo-op: 0;
+  --velo-mezcla: normal;
+  --fondo-tex: none;
+  --fondo-tex-tam: auto;
+  --filtro-foto: none;
+  --foto-marco: 0px;
+  --papel-borde: var(--linea);
+  --cab-fondo: var(--papel);
+  --cab-tinta: var(--tinta);
+
+  display:block;
+}
+
+*{box-sizing:border-box; margin:0; padding:0}
+
+/* overscroll-behavior:contain es lo que reemplazo al candado.
+   Antes se le ponia overflow:hidden a <html> para que no se movieran dos
+   scrolls a la vez, y eso CONGELA el documento de abajo: en una lista
+   virtualizada -YouTube, Instagram- el sitio deja de renderizar items y
+   "cargar mas" no puede funcionar nunca. Con contain la rueda no se le
+   escapa al sitio cuando llegamos al final, y el sitio queda vivo. */
+.marco{
+  position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;
+  overscroll-behavior:contain;
+  /* z-index:0 NO es decoracion: es lo que convierte a .marco en un contexto
+     de apilado propio, y sin eso la capa de motas -que va en -1 para quedar
+     DE FONDO- se iria detras de este mismo fondo y no se veria nunca.
+     Con el contexto creado, -1 cae justo en el hueco que queremos: encima
+     del fondo de .marco y debajo de todo su contenido. */
+  z-index:0;
+  background-color:var(--fondo);
+  background-image:var(--fondo-tex), var(--patron),
+    radial-gradient(900px 620px at 8% -8%, var(--vel1), transparent 62%),
+    radial-gradient(760px 560px at 104% 106%, var(--vel2), transparent 60%);
+  background-size:var(--fondo-tex-tam), auto, auto, auto;
+  background-repeat:repeat,repeat,no-repeat,no-repeat;
+  background-attachment:scroll,scroll,fixed,fixed;
+  color:var(--tinta);
+  font-family:var(--txt);
+  font-size:16px; line-height:1.6;
+  letter-spacing:var(--ls);
+  -webkit-font-smoothing:antialiased;
+  /* lo que se hereda del sitio y hay que cortar de raiz: si la pagina de
+     abajo tiene text-transform:uppercase o un font-style raro en <html>,
+     se nos mete aca adentro aunque el resto de su CSS no llegue */
+  text-align:left; text-transform:none; text-indent:0;
+  white-space:normal; word-spacing:normal; direction:ltr;
+  font-style:normal; font-weight:400; font-variant:normal;
+}
+
+/* EL VELO: la capa de grano / papel / scanlines que va ENCIMA de todo.
+   Apagada por defecto (--velo-op:0); la conexion la enciende. Es lo que
+   convierte un diseño limpio en una foto vieja sin tocar nada mas. */
+.marco::after{
+  content:""; position:fixed; inset:0; z-index:9;
+  pointer-events:none;
+  background-image:var(--velo);
+  background-size:var(--velo-tam);
+  background-repeat:repeat;
+  opacity:var(--velo-op);
+  mix-blend-mode:var(--velo-mezcla);
+}
+
+/* ================= LAS MOTAS =================
+   La capa que cae. Son 28 cajitas vacias que no significan nada por si
+   solas: el tema decide que SON. Gotas de sangre para terror, piezas de
+   Tetris para arcade, ceniza, nieve, hojas, chispas.
+
+   Existen para que un fondo animado no necesite ni una linea de JavaScript:
+   la conexion solo escribe CSS, asi que sin nodos donde agarrarse no podia
+   hacer que cayera nada. Vienen APAGADAS (--motas-op:0) y el tema las
+   enciende.
+
+   CADA UNA TRAE SU PROPIO AZAR, Y ESO ES EL ARREGLO.
+   Antes la columna salia de `left: var(--i) * 3.57%` y el arranque de
+   `var(--i) * -0.41s`. Las dos son progresiones lineales del mismo numero,
+   asi que las cajitas no caian repartidas: caian formando UNA DIAGONAL
+   perfecta, siempre la misma, vuelta tras vuelta. Se veia como una regla
+   inclinada bajando, no como algo que cae.
+
+   Ahora el azar lo siembra rearmar.js, que es quien puede tenerlo: a cada
+   cajita le pone --x (su columna), --d (en que punto de su ciclo empieza),
+   --v (que tan rapido cae) y --z (que tan grande es). Esta hoja no sabe de
+   azar; lo recibe y lo usa. Los valores viejos siguen de respaldo por si
+   llega un nodo sin sembrar.
+
+   --mota-azar gradua TODO ese desorden desde una sola perilla: 1 es cada
+   una por su lado (lo de siempre) y 0 es todas iguales y a la vez, que es
+   justo lo que necesita el modo Tetris de aca abajo para que la fila se
+   complete y se borre entera.
+
+   ESTO ES FONDO, NO ENCIMA. Iba en z-index 8, por delante de todo, y una
+   pieza quieta encima de un parrafo durante medio ciclo no se lee como una
+   animacion: se lee como que algo se rompio. Ahora va en -1, que dentro del
+   contexto de apilado de .marco cae en el unico lugar que sirve: por encima
+   del fondo y por debajo de TODO el contenido. Las piezas se ven en los
+   huecos y detras del texto, y ni una letra queda tapada nunca. Por eso
+   .marco lleva z-index:0; si se lo quitan, esta capa desaparece. */
+.motas{
+  position:fixed; inset:0; z-index:-1;
+  pointer-events:none; overflow:hidden;
+  opacity:var(--motas-op, 0);
+  /* la rejilla del tablero, en medidas que aguantan un cambio de tamaño de
+     ventana: el ancho en % del contenedor -que es la pantalla- y el alto en
+     vw, para que la pieza salga cuadrada sola. Viven aca y no en la pieza
+     porque las filas tambien las necesitan. */
+  --au-gw: calc(100% / var(--au-cols, 26));
+  --au-gh: calc(100vw / var(--au-cols, 26));
+}
+
+/* ---------- CADA FILA ES UN NODO ----------
+   Y esto es lo que hace que el Tetris sea una partida y no una lluvia de
+   cuadraditos. Con las 40 piezas colgando sueltas de .motas solo se podia
+   escribir UN @keyframes para todas, y un keyframes mueve a todo el que lo
+   corre exactamente igual: caia el tablero entero de una sola vez, como una
+   pared. Puestas en filas, cada fila corre SU animacion, con su turno: cae
+   la de abajo y se queda, cae la siguiente y se apoya encima, y asi.
+
+   Fuera del modo Tetris esto no hace absolutamente nada: es una caja
+   transparente del tamaño de la pantalla, sin animacion (duracion 0s), y
+   las piezas siguen cayendo cada una por su lado como siempre. */
+.motas .fila{
+  position:absolute; inset:0;
+  animation-timing-function:var(--mota-curva, linear);
+  animation-iteration-count:infinite;
+  /* EL INTERRUPTOR ES LA DURACION, no el nombre. El nombre tiene que salir
+     de :nth-child -es lo unico que distingue una fila de otra desde el
+     CSS-, asi que no puede depender de una variable. Con --mota-tetris sin
+     poner la duracion es 0s y la animacion no corre; en cuanto el tema le
+     da un tiempo, arranca la partida. */
+  animation-duration:var(--mota-tetris, 0s);
+}
+.motas .fila:nth-child(1){ animation-name:au-tetris-0 }
+.motas .fila:nth-child(2){ animation-name:au-tetris-1 }
+.motas .fila:nth-child(3){ animation-name:au-tetris-2 }
+.motas .fila:nth-child(4){ animation-name:au-tetris-3 }
+.motas .fila:nth-child(5){ animation-name:au-tetris-4 }
+.motas .fila:nth-child(6){ animation-name:au-tetris-5 }
+
+.motas i{
+  position:absolute; display:block; top:0;
+  /* --x lo siembra rearmar.js. El respaldo es por si llega un nodo sin
+     sembrar: 2.5% por cajita cubre las 40 sin salirse de la pantalla. */
+  left:var(--x, calc(var(--i) * 2.5%));
+  width:var(--mota-ancho, 5px);
+  height:var(--mota-alto, 14px);
+  background:var(--mota-color, var(--acento));
+  border-radius:var(--mota-radio, 3px);
+
+  animation-name:var(--mota-anim, au-caer);
+  animation-timing-function:var(--mota-curva, linear);
+  animation-iteration-count:infinite;
+  /* --v va de -.35 a .35: unas caen mas rapido que otras. El max() no es
+     adorno: --mota-azar lo escribe el modelo, y con un valor fuera de rango
+     -un 5 en vez de un .5- la cuenta da negativa, la declaracion se vuelve
+     invalida, la duracion cae a 0s y las cajitas se quedan CONGELADAS a
+     media pantalla sin que nada avise. */
+  animation-duration:max(0.6s, calc(var(--mota-tiempo, 7s) *
+                                    (1 + var(--v, 0) * var(--mota-azar, 1))));
+  /* el retardo NEGATIVO es lo que las reparte a lo alto: cada una empieza
+     ya metida en su propio ciclo. --mota-desfase queda para quien quiera
+     un escalonado a proposito, y por eso ahora arranca en 0s. */
+  animation-delay:calc(var(--mota-tiempo, 7s) * var(--d, 0) * var(--mota-azar, 1)
+                       + var(--i) * var(--mota-desfase, 0s));
+}
+@keyframes au-caer{
+  from{ transform:translateY(-16vh) rotate(var(--mota-giro-de, 0deg))
+                 scale(calc(1 + var(--z, 0) * var(--mota-azar, 1))) }
+  to  { transform:translateY(116vh) rotate(var(--mota-giro-a, 0deg))
+                 scale(calc(1 + var(--z, 0) * var(--mota-azar, 1))) }
+}
+
+/* ---------- MODO TETRIS ----------
+   No es "cajitas cuadradas cayendo": es la partida. Cae una fila y SE QUEDA
+   abajo. Cae la siguiente y se apoya encima. Y asi hasta armar la pila.
+   Entonces la fila de abajo -que esta completa- parpadea, se borra, y todo
+   lo que estaba encima BAJA UN RENGLON. Despues vuelve a empezar.
+
+   POR QUE HAY CINCO @keyframes Y NO UNO.
+   Un @keyframes mueve igual a todo el que lo corre. Con las 40 piezas
+   colgando sueltas de .motas no habia forma de que una cayera antes que
+   otra: bajaba el tablero entero de una sola vez, como una pared. La fila
+   tiene que ser un NODO para poder tener su propio turno, y el turno tiene
+   que estar escrito en el keyframes porque los porcentajes de un keyframes
+   no aceptan variables. Cinco filas, cinco keyframes, cada uno con su
+   ventana de caida y con el mismo final para todos.
+
+   Lo unico que cambia de uno a otro son dos numeros: cuando empieza a caer
+   y a que altura se apoya. El resto -el parpadeo, el borrado y la bajada-
+   pasa a la misma hora para todas, que es lo que hace que se lea como UNA
+   linea que se completa y no como cinco cosas sueltas.
+
+   Se enciende con --mota-tetris (el tiempo de una partida) y las piezas se
+   quedan quietas en su celda con --mota-anim: au-pieza. */
+
+/* la pieza no se mueve sola: la mueve su fila. Esto solo le fija la celda.
+   El ancho y el alto los pone aca y no --mota-ancho a proposito: en Tetris
+   las piezas TIENEN que embonar, y un ancho cualquiera dejaria la fila con
+   huecos y no se completaria nunca. La junta de 2px es lo que hace que se
+   lean como piezas de un tablero y no como una plancha de color. */
+@keyframes au-pieza{
+  from, to{ left:var(--gx, 0%);
+            width:calc(var(--au-gw) - var(--au-junta, 2px));
+            height:calc(var(--au-gh) - var(--au-junta, 2px)) }
+}
+
+/* LA TABLA DE TIEMPOS DE LA PARTIDA, en % del ciclo. Los seis keyframes de
+   abajo son la misma historia corrida; esto es lo que hay que mirar para
+   entenderlos o para cambiarlos.
+
+     fila   cae        se borra   y al borrarse, las de encima bajan
+       0    0 -> 11       50                    53
+       1    7 -> 18       60                    63
+       2   14 -> 25       69                    72
+       3   21 -> 32       79                    82
+       4   28 -> 39       88                    91
+       5   35 -> 46       98                     -
+
+   Las caidas se pisan siete puntos entre si: mientras una se apoya, la
+   siguiente ya viene bajando. Y los borrados van de abajo hacia arriba, uno
+   detras de otro, bajando el resto un renglon cada vez.
+
+   POR QUE TERMINA VACIO. Es lo unico que hace que el bucle no tenga
+   costura: si al 100% quedara algo en el tablero, al volver al 0% ese algo
+   desapareceria de golpe y se veria el corte -que es justo lo que pasaba
+   cuando se armaban cuatro filas, se borraba UNA y se apagaba todo-. La
+   ultima fila se borra en el 98 y el 0% arranca con el tablero limpio, asi
+   que la partida se ve como si no parara nunca. */
+
+@keyframes au-tetris-0{
+  0%        { transform:translateY(-45vh) }
+  11%, 47%  { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:1; filter:none }
+  50%       { filter:brightness(4) }
+  51%, 100% { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:0; filter:none }
+}
+@keyframes au-tetris-1{
+  0%, 7%    { transform:translateY(-45vh) }
+  18%, 50%  { transform:translateY(calc(100vh - 2 * var(--au-gh))); opacity:1; filter:none }
+  53%, 57%  { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:1; filter:none }
+  60%       { filter:brightness(4) }
+  61%, 100% { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:0; filter:none }
+}
+@keyframes au-tetris-2{
+  0%, 14%   { transform:translateY(-45vh) }
+  25%, 50%  { transform:translateY(calc(100vh - 3 * var(--au-gh))); opacity:1; filter:none }
+  53%, 60%  { transform:translateY(calc(100vh - 2 * var(--au-gh))) }
+  63%, 66%  { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:1; filter:none }
+  69%       { filter:brightness(4) }
+  70%, 100% { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:0; filter:none }
+}
+@keyframes au-tetris-3{
+  0%, 21%   { transform:translateY(-45vh) }
+  32%, 50%  { transform:translateY(calc(100vh - 4 * var(--au-gh))); opacity:1; filter:none }
+  53%, 60%  { transform:translateY(calc(100vh - 3 * var(--au-gh))) }
+  63%, 69%  { transform:translateY(calc(100vh - 2 * var(--au-gh))) }
+  72%, 76%  { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:1; filter:none }
+  79%       { filter:brightness(4) }
+  80%, 100% { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:0; filter:none }
+}
+@keyframes au-tetris-4{
+  0%, 28%   { transform:translateY(-45vh) }
+  39%, 50%  { transform:translateY(calc(100vh - 5 * var(--au-gh))); opacity:1; filter:none }
+  53%, 60%  { transform:translateY(calc(100vh - 4 * var(--au-gh))) }
+  63%, 69%  { transform:translateY(calc(100vh - 3 * var(--au-gh))) }
+  72%, 79%  { transform:translateY(calc(100vh - 2 * var(--au-gh))) }
+  82%, 85%  { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:1; filter:none }
+  88%       { filter:brightness(4) }
+  89%, 100% { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:0; filter:none }
+}
+@keyframes au-tetris-5{
+  0%, 35%   { transform:translateY(-45vh) }
+  46%, 50%  { transform:translateY(calc(100vh - 6 * var(--au-gh))); opacity:1; filter:none }
+  53%, 60%  { transform:translateY(calc(100vh - 5 * var(--au-gh))) }
+  63%, 69%  { transform:translateY(calc(100vh - 4 * var(--au-gh))) }
+  72%, 79%  { transform:translateY(calc(100vh - 3 * var(--au-gh))) }
+  82%, 88%  { transform:translateY(calc(100vh - 2 * var(--au-gh))) }
+  91%, 95%  { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:1; filter:none }
+  98%       { filter:brightness(4) }
+  99%, 100% { transform:translateY(calc(100vh - 1 * var(--au-gh))); opacity:0; filter:none }
+}
+
+/* ---------- Y NADA MAS. EL MOVIMIENTO LO ESCRIBE LA CONEXION ----------
+   Aca hubo un rato cuatro movimientos mas -burbujas, nubes, estrellas, un
+   ecualizador- y se sacaron a proposito. Un cajon de efectos hechos es una
+   lista de la que elegir, y elegir de una lista es exactamente el techo del
+   que este proyecto viene escapando: con seis opciones, seis sitios
+   distintos terminan moviendose igual.
+
+   Lo que se queda aca es SOLO lo que el modelo no puede escribir por su
+   cuenta:
+
+     au-caer    el de por defecto, para un nodo sin instrucciones y para una
+                respuesta vieja que no traiga ninguna.
+     el Tetris  necesita que cada fila sea un NODO y seis @keyframes atados
+                a :nth-child. Eso es estructura, no estilo, y no hay forma
+                de escribirlo desde la hoja del modelo.
+
+   Todo lo demas -que caiga, suba, cruce, titile, rebote, gire, se apague,
+   lo que pida el tema- lo escribe la conexion en su propio @keyframes. Lo
+   que le da de comer es el azar sembrado en cada nodo (--x, --y, --z, --v,
+   --d, --i, --bx): sin eso las 120 cajitas se moverian identicas y
+   cualquier animacion se veria muerta. Por eso se siembran todas SIEMPRE,
+   aunque el efecto de ese dia use dos: el dato tiene que estar antes de que
+   a nadie se le ocurra usarlo. La lista vive en prompt_rearmar.js. */
+
+/* a quien le molesta el movimiento, no se le mueve nada */
+@media (prefers-reduced-motion: reduce){
+  .motas{display:none}
+}
+
+img{display:block; max-width:100%; height:auto}
+a{color:inherit; text-decoration:none}
+
+/* ================= CABECERA =================
+   z-index 5, como siempre. Las motas ya no le llegan: viven en -1, de
+   fondo, asi que la barra las tapa con su propio color sin tener que
+   competir por el z-index. Sigue debajo del velo (9), que es lo que hace
+   que la textura del tema cubra tambien la barra. */
+.cab{
+  position:sticky; top:0; z-index:5;
+  display:flex; align-items:center; gap:22px;
+  padding:12px clamp(16px, 4vw, 48px);
+  background-color:var(--cab-fondo);
+  color:var(--cab-tinta);
+  border-bottom:var(--borde) solid var(--papel-borde);
+}
+/* TRAMPA 1. Decia `.marco.oscuro .cab{background-color:...}`: (0,3,0) contra
+   los (0,1,0) de .cab, asi que en los 4 temas con oscuro:true -la mitad del
+   catalogo de rearmar.js- el fondo de barra que escribiera el modelo no se
+   veia nunca. Ahora la variante solo mueve la PERILLA; el background-color lo
+   sigue declarando .cab, en (0,1,0), donde el modelo lo alcanza. */
+.marco.oscuro{ --cab-fondo:color-mix(in srgb, var(--papel) 88%, transparent) }
+.cab{ backdrop-filter:blur(8px) }
+
+.marca{display:flex; align-items:center; gap:9px; flex:none}
+.marca-ico{display:grid; place-items:center; color:var(--acento)}
+.marca-ico svg{display:block}
+.marca-txt{
+  font-family:var(--tit); font-weight:700; font-size:16px;
+  text-transform:var(--tt); letter-spacing:var(--ls);
+}
+
+.menu{display:flex; gap:4px; flex:1; min-width:0; overflow:hidden}
+.menu a{
+  padding:6px 12px; border-radius:999px;
+  font-size:13px; font-weight:600; color:var(--tinta2);
+  white-space:nowrap;
+  transition:background-color .15s, color .15s;
+}
+.menu a:hover{background-color:var(--acento); color:var(--sobre)}
+
+.volver{
+  flex:none; cursor:pointer;
+  padding:8px 15px;
+  border:var(--borde) solid var(--acento);
+  border-radius:999px;
+  background:transparent; color:var(--acento);
+  font-family:var(--tit); font-size:12px; font-weight:700;
+  text-transform:var(--tt); letter-spacing:var(--ls);
+  transition:background-color .15s, color .15s;
+}
+.volver:hover{background-color:var(--acento); color:var(--sobre)}
+
+/* ================= PORTADA ================= */
+.hero{
+  display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(24px, 4vw, 56px);
+  align-items:center;
+  max-width:1180px; margin:0 auto;
+  /* TRAMPA 3: el padding de arriba y el de abajo salian de .hero.compacta, en
+     (0,2,0) contra los (0,1,0) de .hero, y padding es del modelo. Ahora los
+     dos son perillas y la declaracion vive aca, donde el modelo la alcanza. */
+  padding:var(--hero-arriba, clamp(36px, 7vw, 84px))
+          clamp(16px, 4vw, 48px)
+          var(--hero-abajo, clamp(24px, 4vw, 52px));
+  /* TRAMPA 6: era `.hero .medio{margin-top:26px}`, (0,2,0) contra los (0,1,0)
+     de .medio. Que el reproductor se despegue del titulo es cosa del hero, no
+     del reproductor, asi que el hero lo pide por perilla y .medio lo declara. */
+  --medio-arriba:26px;
+}
+.hero.sin-foto{grid-template-columns:1fr; max-width:820px; text-align:center}
+.hero.sin-foto .ojo{justify-content:center}
+
+.ojo{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:11px; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--acento);
+  margin-bottom:18px;
+}
+.hero h1{
+  font-family:var(--tit);
+  /* TRAMPA 4: el tamaño lo pisaba `.hero.compacta h1`, (0,2,1) contra los
+     (0,1,1) de .hero h1. Le ponia al titulo del modelo un techo de 42px que
+     nadie pidio y del que nadie se enteraba, y encima justo en 'catalogo' y
+     'app', que son la mayoria de las paginas. Ahora la variante mueve la
+     perilla y el font-size se declara aca, en la especificidad del modelo. */
+  font-size:var(--hero-h1-tam, clamp(34px, 5.4vw, 62px));
+  line-height:1.04;
+  font-weight:800;
+  text-transform:var(--tt);
+  letter-spacing:var(--ls);
+  text-wrap:balance;
+}
+/* TRAMPAS 2, 5 y 7, las tres del .lema: `.hero.sin-foto .lema`,
+   `.hero.compacta .lema` y `.hero.con-video .lema` valian (0,3,0) contra los
+   (0,1,0) de .lema y se llevaban margin y font-size. Centrar es layout, pero
+   se escribe con margin, que SI es del modelo: su .lema{margin:0} no movia
+   nada. Las tres variantes ahora solo mueven perillas, y las tres
+   declaraciones viven aca. */
+.lema{
+  margin-top:var(--lema-arriba, 20px);
+  margin-left:var(--lema-lados, 0);
+  margin-right:var(--lema-lados, 0);
+  font-size:var(--lema-tam, clamp(16px, 1.5vw, 19px));
+  line-height:1.62;
+  color:var(--tinta2);
+  max-width:52ch;
+}
+.hero.sin-foto{--lema-lados:auto}
+
+/* en catalogo y app la portada no puede comerse la pantalla: lo que la
+   persona vino a ver es la rejilla, y con el hero normal no entraba ni una
+   fila de tarjetas sin bajar */
+/* Esta regla SIGUE valiendo (0,2,0) y esta bien que asi sea: ya no fija ni una
+   de las propiedades que el modelo decide. Lo que queda son dos cosas que no
+   son suyas -el layout de la rejilla- y cuatro perillas, que son solo el modo
+   de decirle a .hero, a .hero h1 y a .lema que aca miden otra cosa. */
+.hero.compacta{
+  grid-template-columns:1fr;
+  max-width:1320px;
+  align-items:start;
+  --hero-arriba:clamp(22px, 3.5vw, 40px);
+  --hero-abajo:clamp(10px, 2vw, 20px);
+  --hero-h1-tam:clamp(28px, 3.4vw, 42px);
+  --lema-lados:0;
+  --lema-arriba:12px;
+  --lema-tam:clamp(15px, 1.3vw, 17px);
+}
+/* una rejilla no se lee centrada, aunque no haya foto: se re-endereza lo
+   que .sin-foto habia centrado. text-align no esta en la lista del modelo, y
+   tiene que seguir ganandole a .sin-foto, que tambien vale (0,2,0) y esta
+   arriba: por eso se queda con dos clases. */
+.hero.compacta{text-align:left}
+.hero.compacta .ojo{justify-content:flex-start}
+/* esta se queda especifica a proposito: display no es del modelo, y esconder
+   la foto en una rejilla es estructura (ver la cabecera) */
+.hero.compacta .hero-img{display:none}
+
+.hero-img{
+  border-radius:var(--radio);
+  overflow:hidden;
+  border:var(--borde) solid var(--acento);
+  box-shadow:var(--sombra);
+  background-color:var(--papel);
+  padding:var(--foto-marco);
+}
+.hero-img img{width:100%; aspect-ratio:4/3; object-fit:cover; filter:var(--filtro-foto)}
+
+/* ================= VIDEO =================
+   Lo que faltaba: en YouTube el video seguia SONANDO debajo de nuestra
+   pagina -medido: pausado:false, segundo 7.7- porque la tapabamos con algo
+   opaco y no nos lo traiamos. Ahora se trae y el de abajo se pausa.
+
+   Y hay DOS formas de traerlo, no una. Se probo en instagram.com un iframe
+   de youtube-nocookie dentro del shadow: el evento load dispara, pero se ve
+   el icono de documento roto, porque la CSP del sitio manda. Asi que se
+   incrusta solo lo del mismo sitio; lo de afuera se muestra como miniatura
+   con play y un enlace que abre el original. En los dos casos hay salida:
+   nunca se deja a la persona sin forma de ver el video. */
+/* z-index POR ENCIMA DEL VELO (.marco::after va en 9).
+   El velo es position:fixed e inset:0, o sea que se dibuja sobre todo lo
+   demas; el reproductor y el <iframe> van con z-index automatico. Con una
+   textura opaca -var(--tex-barro) lo es- y --velo-op alto, el video seguia
+   ahi y no se veia: el velo no tapa los clicks (pointer-events:none) pero
+   si la imagen. Con esto el medio queda arriba pase lo que pase.
+   El otro mecanismo, independiente, esta en rearmar.js: cssLimpio() le
+   recorta el tope a --velo-op. Hacen falta los dos: el CSS de la conexion
+   puede escribir cualquier cosa. */
+.medio{
+  display:flex; flex-direction:column; gap:10px; align-items:stretch;
+  position:relative; z-index:10;
+  /* la perilla la mueve .hero (ver TRAMPA 6 alla arriba); fuera del hero el
+     respaldo 0 es lo que ya daba el reset de * */
+  margin-top:var(--medio-arriba, 0);
+}
+
+.video{
+  position:relative; width:100%; aspect-ratio:16/9;
+  border-radius:var(--radio); overflow:hidden;
+  border:var(--borde) solid var(--acento);
+  box-shadow:var(--sombra);
+  background:#000;
+}
+.video iframe, .video video{
+  position:absolute; inset:0; width:100%; height:100%; border:0; display:block;
+}
+
+/* la miniatura de lo que NO se puede incrustar. El fondo negro de .video ya
+   esta, asi que si la foto no carga se ve un reproductor apagado y no un
+   hueco con el icono roto del navegador. */
+.miniatura{display:block; cursor:pointer}
+.miniatura img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; opacity:.62; filter:var(--filtro-foto);
+  transition:opacity .18s ease, transform .35s ease;
+}
+.miniatura:hover img{opacity:.8; transform:scale(1.03)}
+.play{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  display:grid; place-items:center;
+  width:74px; height:74px; border-radius:50%;
+  background-color:var(--acento); color:var(--sobre);
+  box-shadow:0 6px 22px rgba(0,0,0,.45);
+  transition:transform .18s ease;
+}
+.miniatura:hover .play{transform:translate(-50%,-50%) scale(1.09)}
+.play svg{display:block; margin-left:3px}
+.play-txt{
+  position:absolute; left:0; right:0; bottom:0;
+  padding:9px 14px;
+  background-color:rgba(0,0,0,.55);
+  color:#fff;
+  font-size:12px; font-weight:600; letter-spacing:.02em;
+  text-align:center;
+}
+
+/* el enlace al original. Va SIEMPRE, este incrustado o no. */
+.medio-enlace{
+  display:inline-flex; align-items:center; gap:7px; align-self:flex-start;
+  padding:7px 13px;
+  border:var(--borde) solid var(--acento);
+  border-radius:999px;
+  color:var(--acento);
+  font-size:12.5px; font-weight:700;
+  transition:background-color .15s, color .15s;
+}
+.medio-enlace:hover{background-color:var(--acento); color:var(--sobre)}
+.medio-ico{display:grid; place-items:center; flex:none}
+.medio-ico svg{display:block}
+
+.hero .medio-enlace{align-self:center}
+/* la perilla --lema-lados va al final de las tres variantes a proposito: las
+   tres valen (0,2,0), asi que el desempate es el orden, y un hero que sea
+   .compacta Y .con-video tiene que quedar centrado, como hoy. */
+.hero.con-video{grid-template-columns:1fr; max-width:1000px; --lema-lados:auto}
+.hero.con-video .hero-txt{text-align:center}
+.hero.con-video .ojo{justify-content:center}
+
+/* un encabezado de seccion que va fuera de .cuerpo (el de las tarjetas):
+   necesita el mismo ancho de columna que el resto */
+/* TRAMPA 8. Decia `.seccion.suelta{max-width; margin; padding-left/right}`:
+   (0,2,0) contra los (0,1,0) de .seccion, llevandose margin y padding. Ahora
+   solo mueve perillas; las declaraciones estan abajo, en .seccion. */
+.seccion.suelta{
+  --seccion-ancho:1180px;
+  --seccion-arriba:clamp(18px, 3vw, 30px);
+  --seccion-lados:auto;
+  --seccion-px:clamp(16px, 4vw, 48px);
+}
+
+/* ================= TARJETAS ================= */
+.tarjetas{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+  gap:20px;
+  max-width:1180px; margin:0 auto;
+  /* TRAMPA 9: el padding de arriba salia de .tarjetas.grande, (0,2,0) contra
+     estos (0,1,0). Perilla, y la declaracion se queda aca. */
+  padding:var(--tarjetas-arriba, clamp(16px, 3vw, 26px))
+          clamp(16px, 4vw, 48px)
+          clamp(16px, 3vw, 34px);
+}
+.tarjeta{
+  display:flex; flex-direction:column;
+  background-color:var(--papel);
+  border:var(--borde) solid var(--papel-borde);
+  border-radius:var(--radio);
+  overflow:hidden;
+  box-shadow:var(--sombra);
+  transition:transform .16s ease, border-color .16s ease;
+}
+/* TRAMPA 15, ABIERTA. No la arreglo yo porque las dos salidas son una decision
+   de diseño, no un renglon. La etiqueta `a` esta a proposito -solo la tarjeta
+   que LLEVA a algun lado se levanta al pasarle el mouse; una tarjeta escrita
+   por la conexion es un <div> y reaccionar seria mentir- pero cuesta (0,2,1)
+   contra los (0,2,0) del `.tarjeta:hover` que el modelo puede escribir, asi
+   que su border-color se pierde en silencio. transform no importa: no esta
+   entre las propiedades que el modelo decide.
+   Las dos salidas, con lo que cuesta cada una:
+     a) `.tarjeta:where(a):hover` -> (0,2,0), el modelo empata y gana por ir
+        despues, y el <div> sigue sin reaccionar. Cuesta estrenar :where() en
+        esta hoja, que es lo que la cabecera decidio no hacer.
+     b) perilla: `a.tarjeta{--tarjeta-hover-borde:var(--acento)}` y
+        `.tarjeta:hover{border-color:var(--tarjeta-hover-borde, ...)}`. Es la
+        receta de esta hoja, pero abre una trampa nueva en vez de cerrarla: el
+        respaldo tendria que declarar ALGO para el <div>, y ese algo le ganaria
+        al `.tarjeta{border-color:X}` del modelo cada vez que lo hoveren. */
+a.tarjeta:hover{transform:translateY(-3px); border-color:var(--acento)}
+.tarjeta-img{position:relative}
+.tarjeta-img img{width:100%; aspect-ratio:16/10; object-fit:cover; filter:var(--filtro-foto)}
+.tarjeta-txt{padding:15px 16px 17px; display:flex; flex-direction:column; gap:7px}
+.tarjeta-txt h3{
+  font-family:var(--tit);
+  /* TRAMPA 10: el tamaño lo pisaba `.tarjeta.grande .tarjeta-txt h3`, (0,3,1)
+     contra estos (0,1,1), y .grande se pone en 'catalogo' y 'app': el titulo
+     de tarjeta que escribiera el modelo se quedaba en 18.5px en la mayoria de
+     los sitios. Perilla, y la declaracion se queda aca. */
+  font-size:var(--tarjeta-h3-tam, 16px);
+  font-weight:700;
+  line-height:var(--tarjeta-h3-alto, 1.25);
+  text-transform:var(--tt); letter-spacing:var(--ls);
+}
+.tarjeta-txt p{font-size:13.5px; line-height:1.55; color:var(--tinta2)}
+
+/* ---- LA REJILLA MANDA (clase 'catalogo' y 'app') ----
+   En un catalogo la pagina SON las tarjetas: grandes, con la foto entera y
+   el texto corto. El cuerpo de lectura pasa a segundo plano o no va. */
+.tarjetas.grande{
+  grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+  gap:26px;
+  max-width:1320px;
+  --tarjetas-arriba:clamp(10px, 2vw, 18px);
+}
+.tarjeta.grande{--tarjeta-h3-tam:18.5px; --tarjeta-h3-alto:1.28}
+.tarjeta.grande .tarjeta-img img{aspect-ratio:16/9}
+/* esta se queda especifica: .tarjeta-txt no es una de las 34 piezas que el
+   prompt le ofrece al modelo, asi que no hay a quien ganarle */
+.tarjeta.grande .tarjeta-txt{padding:16px 18px 20px; gap:8px}
+/* en rejilla el texto de la tarjeta es una linea de apoyo, no un parrafo:
+   tres renglones de descripcion hacen que no se vea nada de la lista */
+.tarjeta.grande .tarjeta-txt p{
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  overflow:hidden;
+}
+
+/* la tarjeta que ademas ES un video */
+.tarjeta-play{
+  position:absolute; right:11px; bottom:11px;
+  display:grid; place-items:center;
+  width:42px; height:42px; border-radius:50%;
+  background-color:var(--acento); color:var(--sobre);
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+}
+.tarjeta-play svg{display:block; width:20px; height:20px; margin-left:2px}
+.tarjeta-marca{
+  align-self:flex-start;
+  padding:3px 9px; border-radius:999px;
+  background-color:var(--suave);
+  border:var(--borde) solid var(--acento);
+  color:var(--acento);
+  font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+}
+/* la que se esta viendo arriba: se marca, si no la persona pierde de vista
+   cual eligio despues de que el reproductor cambio */
+.sonando{border-color:var(--acento); box-shadow:0 0 0 3px var(--acento)}
+/* lo que acaba de llegar con "cargar mas" no puede aparecer de golpe: sin
+   esto no se nota que la lista crecio */
+.nueva{animation:au-entra .32s ease both}
+@keyframes au-entra{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:none}
+}
+
+/* ---- CARGAR MAS ----
+   Solo puede existir porque ya no congelamos el scroll del sitio: la lista
+   virtualizada de abajo necesita seguir renderizando para tener que dar. */
+.zona-mas{
+  display:flex; justify-content:center;
+  padding:6px clamp(16px, 4vw, 48px) clamp(20px, 3vw, 34px);
+}
+.mas{
+  cursor:pointer;
+  padding:13px 30px;
+  border:var(--borde) solid var(--acento);
+  border-radius:999px;
+  background-color:var(--acento); color:var(--sobre);
+  font-family:var(--tit); font-size:14px; font-weight:700;
+  text-transform:var(--tt); letter-spacing:var(--ls);
+  box-shadow:var(--sombra);
+  transition:opacity .15s, transform .15s;
+}
+.mas:hover{transform:translateY(-2px)}
+.mas:disabled{cursor:default; transform:none}
+.cargando{opacity:.75; animation:au-late 1.1s ease-in-out infinite}
+@keyframes au-late{50%{opacity:.42}}
+/* cuando no hay mas, se dice y se apaga: un boton que sigue vivo y no trae
+   nada es peor que uno gastado */
+.agotado{
+  background-color:transparent; color:var(--tinta2);
+  border-color:var(--papel-borde); box-shadow:none; animation:none; opacity:1;
+}
+
+/* ================= CUERPO ================= */
+.cuerpo{
+  max-width:760px; margin:0 auto;
+  padding:clamp(20px, 3vw, 40px) clamp(16px, 4vw, 48px) 60px;
+}
+.cuerpo > * + *{margin-top:20px}
+
+/* AQUI ESTABA LA TRAMPA QUE SE MIDIO EN EL NAVEGADOR (11, 12 y 13).
+   El modelo escribio .seccion{font-size:14px} y en pantalla salieron 27px,
+   porque el tamaño no se declaraba aca sino en `.cuerpo > h2.seccion`, que
+   vale (0,2,1) contra estos (0,1,0). Ahora TODO lo que el modelo decide se
+   declara en este bloque y las tres variantes de abajo solo mueven perillas,
+   asi que su .seccion{font-size:14px} gana: mismo peso, y su hoja va despues.
+
+   OJO CON LOS DOS RESPALDOS NUEVOS, 1.5em y bold: no son un invento, son lo
+   que el navegador le daba a un <h2> y de lo que .seccion.suelta -que es un
+   h2 fuera de .cuerpo, rearmar.js linea 1216- venia dependiendo en silencio.
+   Escritos aca dejan de ser una casualidad de la hoja de usuario, y el titulo
+   suelto de la rejilla sigue midiendo los mismos 24px de siempre. */
+.seccion{
+  display:flex; align-items:center; gap:11px;
+  font-family:var(--tit);
+  font-size:var(--seccion-tam, 1.5em);
+  font-weight:var(--seccion-peso, bold);
+  text-transform:var(--tt); letter-spacing:var(--ls);
+  line-height:1.2;
+  max-width:var(--seccion-ancho, none);
+  margin-top:var(--seccion-arriba, 0);
+  margin-left:var(--seccion-lados, 0);
+  margin-right:var(--seccion-lados, 0);
+  padding-left:var(--seccion-px, 0);
+  padding-right:var(--seccion-px, 0);
+  padding-bottom:11px;
+  border-bottom:var(--borde) solid var(--papel-borde);
+}
+/* TRAMPAS 11 y 12. El comentario que estaba aca decia, textual, "asi no hace
+   falta !important y la conexion lo puede pisar con una sola clase". Lo
+   primero era cierto; lo segundo era falso y era el defecto medido.
+
+   POR QUE ESTOS DOS SELECTORES NO CAMBIARON NI UNA LETRA.
+   La tentacion era bajarles la especificidad, y las dos formas de hacerlo
+   fallan. h2.seccion daria (0,1,1) y le seguiria ganando a .seccion: el modelo
+   perderia igual, solo que por menos. Y .seccion:where(h2), que si da (0,1,0),
+   rompe el diseño por defecto, porque .seccion.suelta TAMBIEN es un h2 -fuera
+   de .cuerpo- y pasaria de 24px a 27px sin que nadie lo pidiera.
+   El h2 y el h3 no son una decoracion que le estemos robando al modelo: son la
+   forma de saber si esta seccion es de primer o de segundo nivel, un dato que
+   solo el armador tiene. Asi que el selector se queda como estaba y lo que
+   cambia es lo que declara: perillas, no propiedades. La regla sigue en
+   (0,2,1), y ya no le gana al modelo en nada, porque ya no le disputa nada. */
+.cuerpo > h2.seccion{--seccion-tam:27px; --seccion-peso:800; --seccion-arriba:44px}
+.cuerpo > h3.seccion{--seccion-tam:20px; --seccion-peso:700; --seccion-arriba:32px}
+.seccion-ico{display:grid; place-items:center; flex:none; color:var(--acento)}
+.seccion-ico svg{display:block}
+/* TRAMPA 13: valia (0,3,0) -el :first-child cuenta como clase- contra los
+   (0,1,0) de .seccion, y se llevaba el margin. Mismo tratamiento: el selector
+   no cambia, y sigue ganandole por especificidad a las dos perillas de arriba,
+   que valen (0,2,1). */
+.cuerpo > .seccion:first-child{--seccion-arriba:0}
+
+/* TRAMPA 14: el tamaño lo pisaba `.cuerpo.segundo p`, (0,2,1) contra estos
+   (0,1,1). Perilla, y la declaracion se queda aca. */
+.cuerpo p{
+  font-size:var(--cuerpo-p-tam, 17px);
+  line-height:var(--cuerpo-p-alto, 1.75);
+  color:var(--tinta);
+}
+
+.cuerpo ul{padding-left:0; list-style:none; display:flex; flex-direction:column; gap:9px}
+.cuerpo li{
+  position:relative; padding-left:22px;
+  font-size:16px; line-height:1.65; color:var(--tinta);
+}
+.cuerpo li::before{
+  content:""; position:absolute; left:2px; top:.62em;
+  width:7px; height:7px; border-radius:2px;
+  background-color:var(--acento);
+}
+
+.cuerpo blockquote{
+  padding:16px 22px;
+  border-left:3px solid var(--acento);
+  background-color:var(--papel);
+  border-radius:0 var(--radio) var(--radio) 0;
+  font-family:var(--tit);
+  font-size:19px; line-height:1.5;
+  color:var(--tinta);
+}
+
+.foto{
+  border-radius:var(--radio);
+  overflow:hidden;
+  border:var(--borde) solid var(--papel-borde);
+  background-color:var(--papel);
+  padding:var(--foto-marco);
+}
+.foto img{width:100%; filter:var(--filtro-foto)}
+.foto figcaption{
+  padding:9px 14px 11px;
+  font-size:12.5px; line-height:1.5; color:var(--tinta2);
+}
+
+/* ---- EL CUERPO EN SEGUNDO PLANO ----
+   En catalogo y app el texto suelto casi nunca es el articulo: son restos
+   de la interfaz del sitio. Si hay algo que leer se muestra, pero mas chico
+   y despues de la rejilla; si no hay nada, el armador ni lo pone. */
+/* esta regla se queda con dos clases y esta bien: .cuerpo no es una de las 34
+   piezas que el prompt le ofrece al modelo -las suyas son .cuerpo p, .cuerpo
+   li y .cuerpo blockquote-, asi que no le disputa nada a nadie. */
+.cuerpo.segundo{
+  max-width:1320px;
+  margin-top:clamp(14px, 3vw, 28px);
+  padding-top:clamp(18px, 3vw, 30px);
+  border-top:var(--borde) solid var(--papel-borde);
+  opacity:.86;
+  --cuerpo-p-tam:15px;
+  --cuerpo-p-alto:1.65;
+}
+/* max-width no esta entre las propiedades que el modelo decide, asi que el
+   ancho de renglon si se puede quedar en (0,2,1) */
+.cuerpo.segundo p{max-width:72ch}
+
+/* ================= CUANDO NO HABIA NADA =================
+   YouTube con 3 items o Instagram con 2 posts son estados normales de esta
+   maquina, no un error. Lo que no se puede hacer es dibujar una pagina
+   bonita y vacia y presentarla como un buen resultado. */
+.vacio{
+  max-width:720px; margin:clamp(20px, 5vw, 54px) auto;
+  padding:clamp(24px, 4vw, 40px);
+  background-color:var(--papel);
+  border:var(--borde) solid var(--papel-borde);
+  border-left:4px solid var(--acento);
+  border-radius:var(--radio);
+  box-shadow:var(--sombra);
+}
+.vacio h2{
+  font-family:var(--tit); font-size:clamp(21px, 2.6vw, 28px); font-weight:800;
+  line-height:1.2; text-transform:var(--tt); letter-spacing:var(--ls);
+}
+.vacio p{margin-top:14px; font-size:16px; line-height:1.7; color:var(--tinta2)}
+.vacio-bts{display:flex; flex-wrap:wrap; gap:12px; margin-top:24px}
+.bt{
+  cursor:pointer;
+  padding:12px 22px;
+  border:var(--borde) solid var(--acento);
+  border-radius:999px;
+  background-color:var(--acento); color:var(--sobre);
+  font-family:var(--tit); font-size:13.5px; font-weight:700;
+  text-transform:var(--tt); letter-spacing:var(--ls);
+  transition:transform .15s, opacity .15s;
+}
+.bt:hover{transform:translateY(-2px)}
+.bt:disabled{cursor:default; transform:none}
+.flojo{background-color:transparent; color:var(--acento)}
+.flojo:hover{background-color:var(--acento); color:var(--sobre)}
+
+/* ================= LO QUE ESCRIBIO LA CONEXION =================
+   Cuando la pagina vino flaca -medido en el extractor: medida.flaco- la
+   conexion no la describe, la imagina: escribe secciones y tarjetas que el
+   sitio no tiene. Eso hay que poder distinguirlo de lo que si se leyo, y esa
+   distincion es la unica condicion de todo el invento.
+
+   PERO ES UNA FIRMA, NO UN CARTEL. La marca cae sobre MUCHAS piezas a la vez
+   -el titulo, el lema, cada seccion, cada tarjeta-, asi que si dice una
+   palabra la dice seis veces y la pagina se vuelve una fila de advertencias.
+   Por defecto es un solo signo chiquito; el que quiera una palabra la pone
+   con --escrito-sello, y quien la quiera explicada tiene el title que le
+   cuelga el armador.
+
+   Y VA EN EL FLUJO, NO ENCIMA. Una marca en position:absolute cae sobre el
+   texto o sobre la foto en cuanto la pieza cambia de forma -y la conexion le
+   cambia la forma a todo-. Como ::after en flujo, dentro de .tarjeta (que es
+   flex en columna) cae abajo, dentro de .seccion (que es flex en fila) cae
+   al lado del titulo, y en un h1 o un parrafo sigue al texto. Nunca tapa
+   nada, se ponga la pieza como se ponga.
+
+   Y ES UN NODO PROPIO -.sello, que cuelga el armador-, NO un ::after de la
+   pieza firmada. Cuando el signo salia de .escrito::after chocaba con el
+   ::after de la misma pieza: .escrito se le SUMA a la .tarjeta, al h2 o al
+   h1, asi que .escrito::after y .tarjeta::after eran el mismo pseudo-elemento
+   con la misma especificidad, y la hoja de la conexion se adopta despues.
+   Una regla decorativa cualquiera -de las que el prompt pide- borraba la
+   firma sin querer. El respaldo de todo esto no vive aca: esta en rearmar.js
+   (cssLimpio recorta lo que la apague, GUARDA_FIRMA la re-enciende).
+
+   Una sola clase y sin !important, como el resto de la hoja: la conexion
+   tiene que poder re-escribirla entera con .sello{...} desde su hoja. */
+.escrito{position:relative}
+.sello{
+  display:inline-block;
+  align-self:center;
+  margin-left:.5em;
+  vertical-align:baseline;
+  /* la fuente del cuerpo, sin mayusculas y con tamaño propio a proposito:
+     dentro de un h1 se heredan var(--tit), var(--tt) y 62px, y la firma
+     salia mas grande que el titulo que estaba firmando */
+  font-family:var(--txt);
+  font-size:12px; font-weight:600; line-height:1;
+  letter-spacing:normal; text-transform:none;
+  white-space:nowrap;
+  /* la tinta de apoyo y NADA de opacity: con .7 encima el signo se calculaba
+     contra un fondo que todavia no existe -la conexion elige la paleta
+     despues- y en un tema oscuro se apagaba del todo. Chiquito ya es
+     discreto; apagado seria una firma que no firma. */
+  color:var(--tinta2);
+  pointer-events:none;
+}
+/* el signo va en el ::after del sello, no en su textContent, para que la
+   conexion lo pueda cambiar con --escrito-sello sin que nadie escriba HTML */
+.sello::after{content:var(--escrito-sello, "✎")}
+
+/* el renglon honesto. Dice, en el tono del estilo, que lo marcado lo escribio
+   la conexion y no se leyo del sitio. Va chico -no es un error, es una
+   propuesta- pero nunca escondido: es lo que separa "te propongo" de
+   "te miento", y es la unica pieza que sostiene esa diferencia. */
+.nota{
+  max-width:1180px;
+  margin:clamp(12px, 2vw, 20px) auto 0;
+  padding:0 clamp(16px, 4vw, 48px);
+  font-size:12.5px; line-height:1.55;
+  color:var(--tinta2);
+}
+
+/* ================= PIE ================= */
+.pie{
+  display:flex; align-items:center; gap:10px;
+  max-width:1180px; margin:0 auto;
+  padding:26px clamp(16px, 4vw, 48px) 40px;
+  border-top:var(--borde) solid var(--papel-borde);
+  font-size:12.5px; line-height:1.5; color:var(--tinta2);
+}
+.pie-ico{display:grid; place-items:center; flex:none; color:var(--acento); opacity:.7}
+.pie-ico svg{display:block}
+
+/* ================= ANGOSTO ================= */
+@media (max-width: 860px){
+  /* mueve la perilla, no el padding, para que esto se lea igual que el resto
+     de la hoja. El resultado en pantalla NO cambia, y el comentario que estaba
+     aca decia que si: contaba que con padding-top a secas "la unica arma
+     habria sido el orden" y que el hero de catalogo se habria ido a 48px en el
+     telefono. Es falso, y falso en la direccion peligrosa -inventa un bug
+     arreglado-. Un @media no suma especificidad, pero .hero.compacta vale
+     (0,2,0) y este .hero vale (0,1,0) con o sin @media: compacta ya ganaba por
+     especificidad, sin depender del orden. Medido sobre los dos clamp: a
+     390px de ancho compacta da 22.0px y esta regla daria 28.0px; a 860px,
+     30.1px contra 48.0px. Los "30px de hoy" del comentario viejo eran el valor
+     justo en el borde del @media, no el del telefono. */
+  .hero{grid-template-columns:1fr; --hero-arriba:clamp(28px, 6vw, 48px)}
+  .hero-img{order:-1}
+  .menu{display:none}
+}
+
+/* ================= BARRAS DE SCROLL ================= */
+.marco::-webkit-scrollbar{width:12px}
+.marco::-webkit-scrollbar-track{background:var(--fondo)}
+.marco::-webkit-scrollbar-thumb{background:var(--acento); border:2px solid var(--fondo); border-radius:8px}
+.marco::-webkit-scrollbar-thumb:hover{background:var(--acento2)}

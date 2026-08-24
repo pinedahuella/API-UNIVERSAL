@@ -1,0 +1,27 @@
+{
+  "tema": "barro antiguo",
+  "contenido": {
+    "clase": "documento",
+    "flaco": false,
+    "porQueFlaco": "",
+    "sitio": "developer.mozilla.org",
+    "titulo": "Colocar elementos en una rejilla CSS",
+    "lema": "Guia de referencia sobre las lineas, las areas y el flujo automatico de CSS Grid Layout.",
+    "marca": "MDN Web Docs",
+    "menu": ["Referencias", "Guias", "Plataforma", "Blog", "Juega"],
+    "tarjetas": ["grid-template-areas", "grid-auto-flow", "minmax()", "subgrid"],
+    "titulos": [
+      "Las lineas de la rejilla",
+      "Colocar por numero de linea",
+      "Contar desde el final",
+      "Areas con nombre",
+      "El algoritmo de colocacion automatica",
+      "Cuando el elemento no cabe",
+      "Compatibilidad con navegadores"
+    ],
+    "muestra": [
+      "Una rejilla de tres columnas tiene cuatro lineas verticales, no tres: se numeran desde el uno, empezando por el borde inicial del contenedor. Colocar un elemento es decir entre que dos lineas vive, no en que celda cae.",
+      "Cuando un elemento pide una posicion ya ocupada, el algoritmo de colocacion automatica no lo encima: abre una fila implicita al final y lo manda ahi. Por eso una rejilla puede crecer sin que vos hayas declarado esas filas."
+    ]
+  }
+}

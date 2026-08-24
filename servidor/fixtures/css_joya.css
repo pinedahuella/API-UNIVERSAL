@@ -1,0 +1,122 @@
+/* EL DISEÑO JOYA. El otro extremo de la misma comparacion: 44 reglas, las 34
+   piezas vestidas, el titulo con firma propia, cinco :hover, tres ::before
+   con content, ni un rem y nada por debajo de 13px.
+
+   Ademas trae a proposito las tres cosas que descuadran a un medidor
+   ingenuo, para que este fixture pruebe el parser y no solo las puertas:
+     - un @media que baja el titulo a 32px. Si el medidor se quedara con el
+       ULTIMO font-size declarado, mediria el titulo del telefono y castigaria
+       justo al diseño que se tomo el trabajo de ser responsive.
+     - un @keyframes, cuyos fotogramas NO son reglas de estilo. Contarlos
+       infla la cuenta de reglas.
+     - un content con una llave adentro: content:"}" . Sin tratar las cadenas
+       aparte, ahi se cierra un bloque que nadie abrio y el resto del archivo
+       se lee corrido.
+
+   Si el medidor dice que esto NO pasa, el medidor esta roto. */
+
+.marco { background: #0e0b14; color: #e8e2f0; font-family: 'Century Gothic', sans-serif; min-height: 100%; }
+
+.cab { position: sticky; top: 0; background: rgba(14, 11, 20, .92); border-bottom: 2px solid #ff4d6d; padding: 14px 22px; backdrop-filter: blur(8px); }
+
+.cab::after { content: ""; display: block; height: 3px; background: linear-gradient(90deg, #ff4d6d, #4dd8ff); }
+
+.marca-txt { font-size: 20px; font-weight: 700; letter-spacing: .08em; color: #fff; text-transform: uppercase; }
+
+.marca-ico { width: 26px; height: 26px; filter: drop-shadow(0 0 6px #ff4d6d); }
+
+.menu a { font-size: 15px; color: #b9aecd; text-decoration: none; padding: 6px 10px; border-radius: 999px; transition: color .18s, background .18s; }
+
+.menu a:hover { color: #0e0b14; background: #4dd8ff; }
+
+.volver { font-size: 14px; color: #0e0b14; background: #ff4d6d; padding: 8px 16px; border-radius: 999px; font-weight: 700; }
+
+.volver:hover { background: #4dd8ff; transform: translateY(-2px); }
+
+.hero { padding: 72px 24px 48px; position: relative; overflow: hidden; }
+
+.hero h1 { font-size: clamp(44px, 7vw, 88px); line-height: .96; color: #fff; text-shadow: 4px 4px 0 #ff4d6d, 8px 8px 0 rgba(77, 216, 255, .55); }
+
+.hero h1::after { content: "}"; display: block; color: #4dd8ff; font-size: 28px; opacity: .7; }
+
+.ojo { font-size: 14px; letter-spacing: .28em; text-transform: uppercase; color: #ff4d6d; margin-bottom: 10px; }
+
+.lema { font-size: 22px; line-height: 1.45; color: #cbc0dd; max-width: 58ch; margin-top: 18px; }
+
+.hero-img { border: 3px solid #ff4d6d; border-radius: 18px; overflow: hidden; box-shadow: 18px 18px 0 rgba(77, 216, 255, .35); }
+
+.hero-img img { width: 100%; display: block; filter: saturate(1.15) contrast(1.05); }
+
+.medio { margin: 40px auto; max-width: 900px; border: 2px solid #2a2138; border-radius: 16px; padding: 12px; }
+
+.video { border-radius: 12px; overflow: hidden; background: #17111f; }
+
+.video.miniatura { position: relative; cursor: pointer; }
+
+.play { width: 74px; height: 74px; border-radius: 50%; background: #ff4d6d; box-shadow: 0 0 0 10px rgba(255, 77, 109, .22); }
+
+.play-txt { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: #cbc0dd; }
+
+.medio-enlace { font-size: 15px; color: #4dd8ff; text-decoration: none; border-bottom: 1px dashed #4dd8ff; }
+
+.medio-enlace:hover { color: #ff4d6d; border-bottom-color: #ff4d6d; }
+
+.seccion { font-size: 34px; color: #fff; margin: 56px 0 22px; letter-spacing: -.01em; }
+
+.seccion::before { content: "> "; color: #4dd8ff; }
+
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; counter-reset: n; }
+
+.tarjeta { background: #17111f; border: 2px solid #2a2138; border-radius: 16px; overflow: hidden; counter-increment: n; transition: transform .2s, border-color .2s; }
+
+.tarjeta:hover { transform: translateY(-6px); border-color: #ff4d6d; }
+
+.tarjeta::before { content: counter(n); position: absolute; font-size: 46px; color: rgba(255, 77, 109, .28); }
+
+.tarjeta-img { aspect-ratio: 16 / 10; overflow: hidden; background: #0e0b14; }
+
+.tarjeta-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.tarjeta-txt h3 { font-size: 17px; color: #fff; line-height: 1.3; padding: 12px 14px; }
+
+.tarjeta-play { background: #ff4d6d; color: #0e0b14; border-radius: 8px; padding: 4px 8px; }
+
+.mas { font-size: 16px; font-weight: 700; color: #0e0b14; background: #4dd8ff; border: none; border-radius: 999px; padding: 14px 34px; cursor: pointer; }
+
+.mas:hover { background: #ff4d6d; letter-spacing: .06em; }
+
+.vacio { border: 2px dashed #2a2138; border-radius: 16px; padding: 26px; text-align: center; }
+
+.cuerpo p { font-size: 18px; line-height: 1.7; color: #cbc0dd; margin-bottom: 18px; }
+
+.cuerpo li { font-size: 17px; line-height: 1.65; color: #cbc0dd; }
+
+.cuerpo blockquote { font-size: 1.25em; font-style: italic; color: #fff; border-left: 4px solid #ff4d6d; padding-left: 20px; }
+
+.cuerpo blockquote::before { content: "\201C"; color: #ff4d6d; font-size: 42px; }
+
+.foto { margin: 30px 0; border-radius: 14px; overflow: hidden; }
+
+.foto figcaption { font-size: 14px; color: #8f83a3; padding-top: 8px; }
+
+.escrito { border-left: 3px solid #4dd8ff; padding-left: 16px; background: rgba(77, 216, 255, .06); }
+
+.sello { display: inline-block; background: #4dd8ff; color: #0e0b14; border-radius: 6px; padding: 2px 8px; font-size: 13px; }
+
+.nota { font-size: 14px; color: #8f83a3; font-style: italic; }
+
+.pie { border-top: 2px solid #2a2138; padding: 34px 24px; color: #8f83a3; font-size: 15px; }
+
+.motas i { width: 9px; height: 9px; background: #ff4d6d; border-radius: 2px; animation: caer 7s linear infinite; animation-delay: calc(var(--i) * -.06s); }
+
+@keyframes caer {
+  0% { transform: translateY(-12vh) rotate(0deg); opacity: 0; }
+  15% { opacity: .85; }
+  100% { transform: translateY(112vh) rotate(540deg); opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .hero h1 { font-size: 32px; }
+  .seccion { font-size: 26px; }
+  .lema { font-size: 18px; }
+}

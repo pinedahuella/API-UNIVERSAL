@@ -1,0 +1,28 @@
+{
+  "tema": "periodico viejo, dos columnas",
+  "contenido": {
+    "clase": "documento",
+    "flaco": false,
+    "porQueFlaco": "",
+    "sitio": "es.wikipedia.org",
+    "titulo": "Quetzal resplandeciente",
+    "lema": "Ave de la familia Trogonidae que habita los bosques nubosos de Mesoamerica.",
+    "marca": "Wikipedia",
+    "menu": ["Portada", "Contenidos", "Actualidad", "Pagina aleatoria", "Ayuda"],
+    "tarjetas": ["Trogonidae", "Bosque nuboso", "Biosfera Sierra de las Minas"],
+    "titulos": [
+      "Descripcion",
+      "Distribucion y habitat",
+      "Alimentacion",
+      "Reproduccion",
+      "En la cultura mesoamericana",
+      "Estado de conservacion",
+      "Vease tambien",
+      "Referencias"
+    ],
+    "muestra": [
+      "El quetzal resplandeciente (Pharomachrus mocinno) mide entre 36 y 40 centimetros sin contar la cola, y el macho adulto luce dos plumas cobertoras que pueden pasar los 65 centimetros. El verde del plumaje no es pigmento.",
+      "Anida en troncos podridos que el mismo perfora, casi siempre de aguacatillo muerto en pie. La hembra pone dos huevos de un azul palido y ambos padres se turnan para empollarlos durante unos dieciocho dias."
+    ]
+  }
+}

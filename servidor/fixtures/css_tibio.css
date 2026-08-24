@@ -1,0 +1,51 @@
+/* EL DISEÑO TIBIO. Copia fiel de lo que devolvio el modelo el 2026-08-23 con
+   el prompt viejo, sobre el mismo sitio que despues dio la joya.
+
+   No es un CSS roto: es CSS valido, prolijo, y la pagina se ve fea igual.
+   Por eso hace falta un medidor y no un validador. Lo que tiene:
+     20 reglas   .hero h1 en 1rem (16px)   .seccion mas grande que el titulo
+     todo lo demas en .7rem (11.2px)   0 :hover   0 ::before/::after
+     15 de las 34 piezas sin una sola regla, tres de ellas obligatorias
+     10 tamaños escritos en rem
+
+   Si el medidor dice que esto PASA, el medidor esta roto. */
+
+.marco { background: #f7f7f7; color: #333; font-family: Verdana, sans-serif; }
+
+.marco * { box-sizing: border-box; }
+
+.cab { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 16px; }
+
+.marca-txt { font-size: .7rem; color: #444; font-weight: bold; }
+
+.marca-ico { width: 18px; height: 18px; opacity: .8; }
+
+.menu a { font-size: .7rem; color: #666; text-decoration: none; margin-right: 12px; }
+
+.hero { padding: 24px 16px; background: #fff; }
+
+.hero h1 { font-size: 1rem; color: #222; font-weight: bold; margin-bottom: 8px; }
+
+.ojo { font-size: .7rem; color: #999; letter-spacing: .05em; }
+
+.lema { font-size: .7rem; color: #555; line-height: 1.5; max-width: 640px; }
+
+.medio { margin: 16px 0; background: #eee; padding: 8px; }
+
+.video { border-radius: 4px; overflow: hidden; }
+
+.seccion { font-size: 1.7rem; color: #222; margin: 20px 0 10px; }
+
+.tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.tarjeta { background: #fff; border: 1px solid #e0e0e0; padding: 10px; }
+
+.tarjeta-img { width: 100%; height: 120px; overflow: hidden; background: #ddd; }
+
+.tarjeta-txt h3 { font-size: .7rem; color: #333; margin-top: 6px; }
+
+.cuerpo p { font-size: .7rem; color: #444; line-height: 1.6; }
+
+.cuerpo li { font-size: .7rem; color: #444; }
+
+.pie { font-size: .7rem; color: #888; padding: 16px; text-align: center; }
