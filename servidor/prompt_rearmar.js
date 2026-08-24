@@ -541,7 +541,13 @@ REGLAS DEL CSS
 - Se lee: el texto tiene que contrastar contra su fondo. Un estilo oscuro
   lleva tinta clara. Si el estilo pide una fuente dificil de leer, usala en
   los titulos y dejale al cuerpo una legible.
-- No le pongas alto fijo a .marco ni saques el scroll.
+- LA CAJA DE .marco NO ES TUYA. Es el unico elemento que scrollea toda la
+  pagina. Sobre .marco poné lo que quieras de color, fondo, tipografia y
+  perillas de las motas, pero NUNCA height, min-height, max-height,
+  overflow, position, inset ni transform. Un diseño le puso height:100vh y
+  overflow:hidden y la pagina quedo cortada, sin barra y sin manera de bajar
+  teniendo contenido abajo. Se mide y se reprueba: si otro candidato no lo
+  hizo, gana el otro.
 - EL MEDIO NO SE ESCONDE. Sobre .medio, .video, .miniatura, .play, .play-txt
   y el enlace al original (.medio-enlace) esta PROHIBIDO display:none,
   visibility:hidden, opacity:0, height:0, max-height:0, width:0, font-size:0,

@@ -809,6 +809,78 @@ if(!rango){
   }
 }
 
+/* ---------- 11. EL SCROLL DE LA PAGINA ARMADA ----------
+   .marco es el unico que scrollea. Un diseño le puso overflow:hidden y
+   position:static y la pagina quedo cortada, sin barra y sin forma de bajar
+   teniendo contenido abajo; otros disenos del mismo sitio en la misma corrida
+   salieron sanos, o sea que falla A VECES. El prompt ya lo prohibia en una
+   linea suelta, y esa linea es un aviso. Tienen que existir los tres
+   mecanismos, porque cada uno tapa lo que el otro no:
+     GUARDA_SCROLL   en la hoja que se adopta al final, con !important: gana
+                     contra cualquier regla del modelo sobre .marco.
+     revisarScroll   mide despues de dibujar y nombra a la pieza culpable
+                     cuando el contenido quedo fuera de alcance por otra via.
+     CAJA_DEL_MARCO  reprueba al candidato en el medidor, ANTES del navegador:
+                     si otro de los que se pidieron en paralelo no lo hizo,
+                     gana el otro y esto no llega a verse.
+   Y la nota tiene que castigarlo: el mejor-de-N elige por puntos, asi que una
+   puerta que no pesa en la nota no cambia quien gana. */
+/* medir_diseno.js ya esta leido mas arriba, se reusa */
+
+/* se comprueba la SUSTANCIA, no el nombre de la constante: renombrar
+   GUARDA_SCROLL no puede pasar en verde, y lo que de verdad defiende el
+   scroll son estas dos declaraciones con !important dentro de la hoja que
+   se adopta al final. Mirar solo el identificador era una etiqueta. */
+for (const [donde, texto, que] of [
+  ["rearmar.js", rearmar, "overflow-y:auto !important"],
+  ["rearmar.js", rearmar, "position:absolute !important"],
+  ["rearmar.js", rearmar, "GUARDA_FIRMA + GUARDA_SCROLL"],
+  ["rearmar.js", rearmar, "function revisarScroll"],
+  ["medir_diseno.js", medidor, "CAJA_DEL_MARCO"],
+]) {
+  if (texto.indexOf(que) < 0) {
+    fallar("el scroll no se puede tocar", "falta `" + que + "` en " + donde +
+           ": sin eso, un diseño puede dejar la pagina sin forma de bajar y nada lo impide");
+  }
+}
+/* que revisarScroll se llame de verdad, y no solo exista. Sin regex a
+   proposito: la llamada y la declaracion se distinguen contando. */
+const vecesRevisarScroll = rearmar.split("revisarScroll").length - 1;
+if (vecesRevisarScroll < 2) {
+  fallar("el scroll no se puede tocar", "revisarScroll aparece " + vecesRevisarScroll +
+         " vez en rearmar.js: esta declarada y NADIE la llama");
+}
+/* y que la nota la castigue: si no, el roto le gana al sano */
+/* no alcanza con que EXISTA el castigo: tiene que ser un numero de verdad.
+   Con `p -= 0;` la comprobacion anterior seguia dando verde, que es
+   exactamente el defecto que este archivo existe para no tener. */
+const iTocado = medidor.indexOf("m.marcoTocado && m.marcoTocado.length) p -=");
+let castigo = 0;
+if (iTocado >= 0) {
+  const cola = medidor.slice(iTocado, iTocado + 120);
+  const num = cola.slice(cola.indexOf("p -=") + 4).trim();
+  castigo = parseFloat(num) || 0;
+}
+if (iTocado < 0 || castigo < 20) {
+  fallar("el scroll no se puede tocar", "medir_diseno.js reprueba por marcoTocado y le baja " +
+         castigo + " puntos, que no alcanza (hacen falta 20 o mas). El mejor-de-N elige por " +
+         "puntos: un diseño con la pagina cortada podria ganarle a uno sano");
+}
+/* y que el prompt se lo diga, con las propiedades por nombre */
+const iCaja = prompt.indexOf("LA CAJA DE .marco NO ES TUYA");
+const prohibe = iCaja < 0 ? "" : prompt.slice(iCaja, iCaja + 700);
+if (!prohibe) {
+  fallar("el scroll no se puede tocar", "el prompt ya no le dice al modelo que la caja de .marco no es suya");
+}
+for (const prop of ["overflow", "position", "inset", "max-height"]) {
+  if (prohibe.indexOf(prop) < 0) {
+    fallar("el scroll no se puede tocar", "el prompt no le nombra `" + prop +
+           "` al modelo, y es una de las que apagan el scroll");
+  }
+}
+marcar("el scroll no se puede tocar", "los 3 mecanismos (GUARDA_SCROLL, revisarScroll y la puerta " +
+       "del medidor), que la nota lo castigue, y las 4 propiedades nombradas en el prompt");
+
 /* ---------- el veredicto, con su alcance a la vista ---------- */
 console.log('QUE SE REVISO');
 hechas.forEach(h => console.log('  [ok] ' + h));

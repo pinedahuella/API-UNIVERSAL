@@ -281,10 +281,35 @@ const GUARDA_FIRMA =
   'display:inline !important;visibility:visible !important;opacity:1 !important;' +
   'font-size:12px !important;color:inherit !important;}';
 
+/* EL SCROLL DE LA PAGINA NO SE PUEDE TOCAR, Y ESTO ES UN MECANISMO.
+   .marco es el unico que scrollea: position:absolute, inset:0 y overflow-y
+   auto. El prompt ya le dice al modelo "no le pongas alto fijo a .marco ni
+   saques el scroll", y eso es un AVISO. Paso lo que pasa siempre con los
+   avisos: un diseño salio con la pagina cortada, sin barra y sin forma de
+   bajar, teniendo contenido abajo. En la misma corrida, otros disenos del
+   mismo sitio salieron sanos -medido: scrollHeight 2131 contra clientHeight
+   674, barra de 12px-, o sea que es de las que fallan A VECES, que son las
+   peores de encontrar.
+
+   Va con !important y en la hoja que se adopta AL FINAL porque no es
+   estilo: es la condicion para que la pagina se pueda leer. Y no le quita
+   nada al modelo, que no tiene por que decidir la caja del contenedor que
+   scrollea; todo lo que si es suyo -fondo, color, tipografia, las perillas
+   de las motas- sigue entrando por .marco sin que esto lo estorbe.
+
+   Se fija tambien `inset` y `position`: con position:static el inset no
+   aplica, el alto lo pone el contenido y el que termina scrolleando es el
+   documento del sitio, que esta tapado. Se ve igual que no poder bajar. */
+const GUARDA_SCROLL =
+  '.marco{position:absolute !important;inset:0 !important;' +
+  'overflow-y:auto !important;overflow-x:hidden !important;' +
+  'height:auto !important;min-height:0 !important;max-height:none !important;' +
+  'transform:none !important;}';
+
 let _guarda = null;
 function hojaGuarda(){
   if(_guarda) return _guarda;
-  try { _guarda = new CSSStyleSheet(); _guarda.replaceSync(GUARDA_FIRMA); }
+  try { _guarda = new CSSStyleSheet(); _guarda.replaceSync(GUARDA_FIRMA + GUARDA_SCROLL); }
   catch(e){ _guarda = null; }
   return _guarda;
 }
@@ -1376,6 +1401,7 @@ function AU_ARMAR(c, d, alQuitar){
   desahogar(raiz);
   revisarMotas(raiz);
   revisarEscala(raiz);
+  revisarScroll(raiz);
   /* la pagina de abajo queda viva: se scrollea, sigue renderizando y por eso
      "cargar mas" puede funcionar. La rueda no se le escapa al sitio porque
      .marco lleva overscroll-behavior:contain, que es de nuestro lado: no se
@@ -1552,6 +1578,61 @@ function revisarEscala(raiz){
                    (cue ? ' y el cuerpo en ' + cue.toFixed(1) + 'px' : '') +
                    ': por debajo de ' + TITULO_MIN_PX + 'px o del doble del cuerpo, ' +
                    'se le pone ' + red);
+    } catch(e){}
+  };
+  mirar();
+  setTimeout(mirar, 400);
+}
+
+/* ---------- LA RED DEL SCROLL ----------
+   GUARDA_SCROLL le gana a cualquier regla que el modelo escriba SOBRE
+   .marco, y con eso alcanza para la causa que ya vimos. Pero hay otras
+   maneras de dejar el contenido fuera de alcance que no pasan por .marco:
+   un hijo en position:fixed sale del flujo y no suma alto, y entonces la
+   pagina no tiene a donde bajar aunque el contenedor este perfecto.
+   Eso no se puede arreglar a ciegas -pisarle el position a una pieza le
+   rompe el diseño a proposito del modelo-, asi que esto MIDE y NOMBRA al
+   culpable. Un bug mudo se vuelve un bug con nombre y apellido en la
+   consola, que es la diferencia entre buscarlo media hora y verlo.
+
+   Corre dos veces y sin requestAnimationFrame, por lo mismo que
+   revisarMotas: la hoja del modelo puede adoptarse despues de montar, y en
+   una pestaña que no esta a la vista rAF esta congelado. */
+function revisarScroll(raiz){
+  const mirar = () => {
+    try {
+      const marco = raiz.querySelector('.marco');
+      if(!marco) return;
+      /* SE MIDE MOVIENDOLO, NO PREGUNTANDOLE.
+         Comparar scrollHeight con clientHeight NO alcanza, y esto se midio:
+         con overflow:hidden el navegador sigue reportando scrollHeight 1827
+         contra clientHeight 584 -o sea "hay de sobra para bajar"- y la rueda
+         no mueve nada. Esta red se escribio primero asi y se le pasaba de
+         largo justo el caso que vino a cazar. La verdad es si el scrollTop
+         se queda donde lo pusimos: eso no se puede fingir. */
+      const donde = marco.scrollTop;
+      marco.scrollTop = donde + 120;
+      const se_movio = marco.scrollTop > donde;
+      marco.scrollTop = donde;
+      if(se_movio) return;                /* se puede bajar: no hay nada que decir */
+      /* y si estaba abajo del todo, no es que no se pueda: es que ya llego */
+      if(donde > 0) return;
+      /* nadie puede bajar, pero puede que de verdad no haya nada abajo.
+         Se pregunta por las piezas: si la ultima termina dentro de la
+         ventana, la pagina es corta y esta bien asi. */
+      let fondo = 0, culpable = null;
+      for(const h of marco.children){
+        if(h.classList.contains('motas')) continue;   /* capa de fondo, es fixed a proposito */
+        const r = h.getBoundingClientRect();
+        if(r.bottom > fondo){ fondo = r.bottom; }
+        if(getComputedStyle(h).position === 'fixed') culpable = h.className || h.tagName;
+      }
+      if(fondo <= marco.clientHeight + 4 && !culpable) return;   /* pagina corta de verdad */
+      console.warn('[API UNIVERSAL] la pagina armada no se puede bajar y tiene ' +
+        'contenido abajo: el contenedor mide ' + marco.clientHeight + 'px y lo dibujado ' +
+        'llega a ' + Math.round(fondo) + 'px' +
+        (culpable ? '. Hay una pieza fuera del flujo (position:fixed): ' + culpable : '') +
+        '. El scroll de .marco lo defiende GUARDA_SCROLL, asi que esto viene de una pieza.');
     } catch(e){}
   };
   mirar();

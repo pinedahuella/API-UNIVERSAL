@@ -80,6 +80,38 @@ const MIN_TAMANOS = 3;
    Asi que el piso se le aplica a estas cuatro piezas y a nadie mas, y la
    puerta sigue cazando el caso que la hizo nacer. */
 const LECTURA = ['.cuerpo p', '.cuerpo li', '.cuerpo blockquote', '.lema'];
+
+/* .marco ES EL UNICO QUE SCROLLEA, Y SU CAJA NO ES DEL MODELO.
+   La hoja base lo deja en position:absolute, inset:0 y overflow-y:auto. Un
+   diseño le puso height:100vh y overflow:hidden y la pagina quedo cortada,
+   sin barra y sin forma de bajar teniendo contenido abajo. Otros disenos del
+   mismo sitio en la misma corrida salieron sanos, asi que es de las que
+   fallan a veces. Medido: con overflow:hidden el navegador igual reporta
+   scrollHeight 1827 contra clientHeight 584, o sea que ni preguntandole se
+   nota. En la extension esto lo tapa GUARDA_SCROLL con !important; aca se
+   reprueba al candidato, que es mejor: si otro de los que se pidieron en
+   paralelo no lo hizo, gana ese y el problema no llega al navegador.
+   Lo demas que el modelo escriba sobre .marco -fondo, color, tipografia y
+   las perillas de las motas- es suyo y no entra en esta lista. */
+/*  QUE ROMPE DE VERDAD, Y QUE NO. La primera version de esta lista puso
+    height, min-height, overflow-x y transform, y reprobo al fixture de
+    control -que trae .marco{min-height:100%}- sin que ese diseño tuviera
+    nada malo. Reprobar de mas es tan caro como no reprobar: el mejor-de-N
+    se queda sin candidatos buenos. Asi que quedan solo las que apagan el
+    scroll de verdad:
+      overflow / overflow-y  apagan el scroll. Es la causa medida.
+      position               en static el inset deja de aplicar, el marco
+                             crece con el contenido y el que tendria que
+                             scrollear es el documento del sitio, que esta
+                             tapado. Se ve igual que no poder bajar.
+      inset y sus lados      sin inset el marco absoluto se colapsa.
+      max-height             recorta la pagina a una altura fija.
+    height y min-height NO entran: con position:absolute e inset:0 el alto
+    ya esta resuelto por los bordes, y un height:100vh o un min-height:100%
+    ahi no cambian nada. transform tampoco: crea un bloque contenedor y no
+    toca el scroll. */
+const CAJA_DEL_MARCO = ['overflow', 'overflow-y', 'position', 'inset',
+                        'top', 'right', 'bottom', 'left', 'max-height'];
 const PISO_PX = 13;
 
 /* El viewport de referencia para resolver clamp()/vw/vh sin navegador. 1200px
@@ -559,13 +591,25 @@ function medirDeVerdad(css) {
 
   const firmaTitulo = medirFirma(reglas);
 
+  /* solo cuando .marco es el SUJETO del selector: `.marco .tarjeta{height}`
+     le pone alto a la tarjeta, no al contenedor, y eso si es del modelo */
+  const marcoTocado = [];
+  for (const r of reglas) {
+    if (!r.partes.some(parte => piezaEnParte('.marco', parte))) continue;
+    for (const d of r.decls) {
+      if (CAJA_DEL_MARCO.indexOf(d.prop) >= 0 && marcoTocado.indexOf(d.prop) < 0) {
+        marcoTocado.push(d.prop);
+      }
+    }
+  }
+
   const faltan = PIEZAS.filter(p => !reglas.some(r => r.partes.some(parte => piezaEnParte(p, parte))));
   const piezas = { vestidas: PIEZAS.length - faltan.length, total: PIEZAS.length, faltan };
   const obligatoriasSinVestir = OBLIGATORIAS.filter(p => faltan.indexOf(p) >= 0);
 
   const medida = {
     reglas: cuantasReglas, hover, pseudo, keyframes: hoja.keyframes, remEnTamanos,
-    tamanos, h1, cuerpoPx, cuerpoDeclarado, firmaTitulo, minimoPx, minimoLecturaPx,
+    tamanos, h1, cuerpoPx, cuerpoDeclarado, firmaTitulo, minimoPx, minimoLecturaPx, marcoTocado,
     piezas, obligatoriasSinVestir,
     puntos: 0, pasa: false, fallos: []
   };
@@ -647,6 +691,11 @@ function juntarFallos(m) {
   }
   /* con minimoPx en null no hay ni un tamaño legible en toda la hoja, y de eso
      ya se queja la puerta de arriba: repetirlo aca seria contar dos veces */
+  if (m.marcoTocado && m.marcoTocado.length) {
+    f.push({ clave: 'scroll', texto: 'le tocaste la caja de .marco (' + m.marcoTocado.join(', ') +
+      '), que es el unico que scrollea: asi la pagina queda cortada y sin forma de bajar. Sobre .marco poné color, fondo, tipografia y las perillas de las motas, nada de alto, overflow ni position' });
+  }
+
   if (m.minimoLecturaPx !== null && m.minimoLecturaPx < PISO_PX) {
     f.push({ clave: 'minimo', texto: 'el texto que se lee de corrido quedo en ' + px(m.minimoLecturaPx) + ' y el piso son ' + PISO_PX + 'px (el lema y el cuerpo, no las etiquetas chicas)' });
   }
@@ -676,7 +725,15 @@ function puntuar(m) {
   p += 5 * tope(m.tamanos.length, 4);
   p += (m.minimoLecturaPx !== null && m.minimoLecturaPx >= PISO_PX) ? 5 : 0;
   p += m.firmaTitulo ? 5 : 0;
-  return Math.round(p);
+  /* LA NOTA TIENE QUE REFLEJAR LA PUERTA, Y ESTO CASI SE ESCAPA.
+     El mejor-de-N elige por PUNTOS, no por `pasa`. Con la puerta del scroll
+     recien puesta, un diseño que dejaba la pagina sin forma de bajar salia
+     con 100 puntos y NO PASA: o sea que podia ganarle a uno sano de 98 y
+     llegar igual al navegador. Una puerta que no pesa en la nota no sirve
+     de nada cuando la nota es la que decide. La pagina que no se puede leer
+     no es un diseño con un detalle: es un diseño que no se puede usar. */
+  if (m.marcoTocado && m.marcoTocado.length) p -= 45;
+  return Math.max(0, Math.round(p));
 }
 
 /* ===========================================================================
