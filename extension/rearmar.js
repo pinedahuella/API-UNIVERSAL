@@ -1455,22 +1455,48 @@ function conTope(promesa, ms){
    en una pestaña que no esta a la vista -el navegador lo congela- que es
    justo cuando el vigilante re-arma sola una pagina de fondo. */
 function revisarMotas(raiz){
-  const mirar = () => {
+  const mirar = (ultima) => {
     try {
       const capa = raiz.querySelector('.motas');
       const piezas = capa ? capa.querySelectorAll('i') : [];
       if(!piezas.length) return;
       /* apagadas no es un fallo: es un tema que decidio no mover nada */
       if(parseFloat(getComputedStyle(capa).opacity) < 0.02) return;
+      /* SE MIDE EL DISEÑO, NO EL PARCHE. Identico a lo que hace
+         revisarEscala, y por la misma razon: la regla que enciende esto
+         -animation-name:var(--mota-anim, au-caer)- vive en pagina.css, y
+         pagina.css se adopta ASINCRONO (_hojaLista es un fetch, y si no
+         llego se cuelga un <link> que tambien carga solo). En la primera
+         pasada, con la hoja todavia en camino, las piezas no corren NADA:
+         getAnimations() da 0 aunque el diseño estuviera perfecto. Se
+         disparaba la red, se estampaba au-caer inline en las 120 piezas, y
+         en la pasada de los 400 ms au-caer YA corria, asi que se salia por
+         el return de aca abajo y el fondo que escribio la conexion quedaba
+         pisado PARA SIEMPRE. Nadie escribe --mota-anim inline en estos
+         nodos salvo nosotros, asi que lo que haya aca es el parche. */
+      const previa = piezas[0].style.getPropertyValue('--mota-anim');
+      if(previa) piezas.forEach(p => p.style.removeProperty('--mota-anim'));
       /* en el modo Tetris la pieza corre au-pieza y quien se mueve es la
          fila, asi que esto tambien da 1 y no hay nada que arreglar */
-      if(piezas[0].getAnimations().length) return;
+      if(piezas[0].getAnimations().length){
+        /* el diseño se defiende solo: el parche queda quitado. Y EN SILENCIO:
+           la pasada 1 ya no avisa nada, asi que no hay ningun aviso que
+           retirar ni nada que explicar. */
+        return;
+      }
       piezas.forEach(p => p.style.setProperty('--mota-anim', 'au-caer'));
-      console.warn('[API UNIVERSAL] el fondo nombraba un @keyframes que no existe: se cae a au-caer');
+      /* SOLO HABLA LA ULTIMA PASADA. La pasada 1 mide contra una hoja que
+         todavia puede venir en camino, asi que su "no existe" es falso casi
+         siempre: ponia el parche, avisaba, y 400 ms despues se desdecia. Eran
+         DOS renglones rojos en chrome://extensions por un fondo que estaba
+         perfecto, y en una demostracion eso se lee como que la extension
+         fallo. Arreglar en la pasada 1 sigue siendo necesario (si no, el
+         fondo se queda quieto 400 ms); avisar no lo es. */
+      if(ultima) console.warn('[API UNIVERSAL] el fondo nombraba un @keyframes que no existe: se cae a au-caer');
     } catch(e){}
   };
-  mirar();
-  setTimeout(mirar, 400);
+  mirar(false);
+  setTimeout(() => mirar(true), 400);
 }
 
 /* ---------- UNA PORTADA SIN JERARQUIA NO SE LEE COMO PORTADA ----------
@@ -1544,7 +1570,7 @@ function redDelTitulo(cue){
 }
 
 function revisarEscala(raiz){
-  const mirar = () => {
+  const mirar = (ultima) => {
     try {
       const h1 = raiz.querySelector('.hero h1');
       if(!h1) return;
@@ -1561,27 +1587,23 @@ function revisarEscala(raiz){
       const cuerpo = raiz.querySelector('.cuerpo p') || raiz.querySelector('.lema');
       const cue = cuerpo ? px(cuerpo) : 0;
       /* el diseño se defiende solo: el parche queda quitado, que es como se
-         desarma esto cuando la hoja del modelo llego tarde. Y si ya se habia
-         avisado, se dice que se retiro: si no, en la consola queda un
-         "se le pone clamp(...)" que dejo de ser cierto y manda a buscar un
-         estilo inline que ya no existe. */
+         desarma esto cuando la hoja del modelo llego tarde. En silencio, por
+         lo mismo que revisarMotas: la pasada 1 ya no avisa, asi que no hay
+         ningun aviso que retirar. */
       if(tit >= TITULO_MIN_PX && (!cue || tit >= cue * 2)){
-        if(previa) console.warn('[API UNIVERSAL] el aviso de arriba se midió antes de que ' +
-                                'llegara la hoja del diseño: el título ya trae ' +
-                                tit.toFixed(1) + 'px, se le quita el arreglo');
         return;
       }
       const red = redDelTitulo(cue);
       h1.style.setProperty('font-size', red);
-      if(previa) return;   /* ya se aviso cuando se puso la primera vez */
-      console.warn('[API UNIVERSAL] el título de portada salió en ' + tit.toFixed(1) + 'px' +
+      /* solo habla la ultima pasada: ver revisarMotas */
+      if(ultima) console.warn('[API UNIVERSAL] el título de portada salió en ' + tit.toFixed(1) + 'px' +
                    (cue ? ' y el cuerpo en ' + cue.toFixed(1) + 'px' : '') +
                    ': por debajo de ' + TITULO_MIN_PX + 'px o del doble del cuerpo, ' +
                    'se le pone ' + red);
     } catch(e){}
   };
-  mirar();
-  setTimeout(mirar, 400);
+  mirar(false);
+  setTimeout(() => mirar(true), 400);
 }
 
 /* ---------- LA RED DEL SCROLL ----------
@@ -1599,7 +1621,7 @@ function revisarEscala(raiz){
    revisarMotas: la hoja del modelo puede adoptarse despues de montar, y en
    una pestaña que no esta a la vista rAF esta congelado. */
 function revisarScroll(raiz){
-  const mirar = () => {
+  const mirar = (ultima) => {
     try {
       const marco = raiz.querySelector('.marco');
       if(!marco) return;
@@ -1628,15 +1650,18 @@ function revisarScroll(raiz){
         if(getComputedStyle(h).position === 'fixed') culpable = h.className || h.tagName;
       }
       if(fondo <= marco.clientHeight + 4 && !culpable) return;   /* pagina corta de verdad */
-      console.warn('[API UNIVERSAL] la pagina armada no se puede bajar y tiene ' +
+      /* solo habla la ultima pasada: ver revisarMotas. Aca ademas evita el
+         aviso DUPLICADO, porque este no pone parche y las dos pasadas
+         median y avisaban lo mismo. */
+      if(ultima) console.warn('[API UNIVERSAL] la pagina armada no se puede bajar y tiene ' +
         'contenido abajo: el contenedor mide ' + marco.clientHeight + 'px y lo dibujado ' +
         'llega a ' + Math.round(fondo) + 'px' +
         (culpable ? '. Hay una pieza fuera del flujo (position:fixed): ' + culpable : '') +
         '. El scroll de .marco lo defiende GUARDA_SCROLL, asi que esto viene de una pieza.');
     } catch(e){}
   };
-  mirar();
-  setTimeout(mirar, 400);
+  mirar(false);
+  setTimeout(() => mirar(true), 400);
 }
 
 function desahogar(raiz){
